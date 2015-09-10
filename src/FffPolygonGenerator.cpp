@@ -1,6 +1,8 @@
 #include "FffPolygonGenerator.h"
 
 #include <algorithm>
+#include <random> // for bulging effect?
+#include <functional> // for bugling?
 
 #include "slicer.h"
 #include "utils/gettime.h"
@@ -76,6 +78,9 @@ bool FffPolygonGenerator::sliceModel(MeshGroup* meshgroup, TimeKeeper& timeKeepe
     meshgroup->clear();///Clear the mesh face and vertex data, it is no longer needed after this point, and it saves a lot of memory.
 
     Progress::messageProgressStage(Progress::Stage::PARTS, &timeKeeper, commandSocket);
+    
+    bulgeWalls(slicerList, meshgroup);
+    
     //carveMultipleVolumes(storage.meshes);
     generateMultipleVolumesOverlap(slicerList, getSettingInMicrons("multiple_mesh_overlap"));
     
@@ -466,6 +471,110 @@ void FffPolygonGenerator::processFuzzySkin(SliceMeshStorage& mesh)
                 }
             }
             skin = results;
+        }
+    }
+}
+
+void FffPolygonGenerator::bulgeWalls(std::vector< Slicer* > slicerList, MeshGroup* meshgroup)
+{
+    
+    assert(slicerList.size() == meshgroup->meshes.size());
+    for (unsigned int mesh_idx = 0; mesh_idx < slicerList.size(); mesh_idx++)
+    {
+        Slicer* slicer = slicerList[mesh_idx];
+        Mesh& mesh = meshgroup->meshes[mesh_idx];
+        
+        if (!mesh.getSettingBoolean("magic_bulge_walls"))
+        {
+//             continue; // TODO
+        }
+        
+        auto getBulging = [](Point xy, int z)
+        {
+            std::hash<int> hash_fn;
+            int cell_size = MM2INT(0.1);
+            int cell_dim = 5; // surrounding taken into account
+            double result = 0.0;
+            int bulging = MM2INT(7.0);
+            Point3 middle(xy.X / cell_size, xy.Y / cell_size, z / cell_size);
+            double total_weight = 0.0;
+            for (int x = middle.x - cell_dim; x < middle.x + cell_dim; x++)
+            {
+                for (int y = middle.y - cell_dim; y < middle.y + cell_dim; y++)
+                {
+                    for (int z = middle.z - cell_dim; z < middle.z + cell_dim; z++)
+                    {
+                        srand(x ^ (y << 8) ^ (z << 16)); // set seed
+                        int h = rand();
+//                         int h = hash_fn(x ^ (y << 8) ^ (z << 16));
+                        double r = (double(h % 200000 - 100000))/100000.0; // between -1 and 1
+                        double weight = 1.0 / (1.0 + static_cast<double>(((Point3(xy.X, xy.Y, z) - Point3(x,y,z)* cell_size)).vSize()) / cell_size * 4);
+                        total_weight += weight;
+                        result += r * weight ;
+                    }
+                }
+            }
+            
+            return static_cast<int>(result / total_weight * bulging);
+//             return rand() % (bulging*2) - bulging;
+        };
+        
+        int64_t avg_dist_between_points = MM2INT(0.5); // mesh.getSettingInMicrons("magic_fuzzy_skin_point_dist");
+        int64_t min_dist_between_points = avg_dist_between_points * 3 / 4; // hardcoded: the point distance may vary between 3/4 and 5/4 the supplied value
+        int64_t range_random_point_dist = avg_dist_between_points / 2;
+        
+        int layer_height = mesh.getSettingInMicrons("layer_height");
+        
+        for (unsigned int layer_nr = 0; layer_nr < slicer->layers.size(); layer_nr++)
+        {
+            SlicerLayer& layer = slicer->layers[layer_nr];
+            Polygons& outlines = layer.polygonList;
+            Polygons results;
+            
+            int z_approx = layer_nr * layer_height;
+            
+            for (PolygonRef poly : outlines)
+            {
+                // generate points in between p0 and p1
+                PolygonRef result = results.newPoly();
+                
+                int64_t dist_left_over = rand() % (min_dist_between_points / 2); // the distance to be traversed on the line before making the first new point
+                Point* p0 = &poly.back();
+                for (Point& p1 : poly)
+                { // 'a' is the (next) new point between p0 and p1
+                    Point p0p1 = p1 - *p0;
+                    int64_t p0p1_size = vSize(p0p1);    
+                    int64_t dist_last_point = dist_left_over + p0p1_size * 2; // so that p0p1_size - dist_last_point evaulates to dist_left_over - p0p1_size
+                    for (int64_t p0pa_dist = dist_left_over; p0pa_dist < p0p1_size; p0pa_dist += min_dist_between_points + rand() % range_random_point_dist)
+                    {
+                        Point in_between = *p0 + normal(p0p1, p0pa_dist);
+                        int r = getBulging(in_between, z_approx);
+                        Point perp_to_p0p1 = crossZ(p0p1);
+                        Point fuzz = normal(perp_to_p0p1, r);
+                        Point pa = in_between + fuzz;
+                        result.add(pa);
+                        dist_last_point = p0pa_dist;
+                    }
+                    dist_left_over = p0p1_size - dist_last_point;
+                    
+                    p0 = &p1;
+                }
+                while (result.size() < 3 )
+                {
+                    unsigned int point_idx = poly.size() - 2;
+                    result.add(poly[point_idx]);
+                    if (point_idx == 0) { break; }
+                    point_idx--;
+                }
+                if (result.size() < 3)
+                {
+                    result.clear();
+                    for (Point& p : poly)
+                        result.add(p);
+                }
+            }
+            
+            outlines = results;
         }
     }
 }

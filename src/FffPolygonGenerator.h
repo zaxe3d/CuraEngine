@@ -12,6 +12,8 @@
 namespace cura
 {
 
+class Slicer; // forward declaration
+    
 /*!
  * Primary stage in Fused Filament Fabrication processing: Polygons are generated.
  * The model is sliced and each slice consists of polygons representing the outlines: the boundaries between inside and outside the object.
@@ -130,12 +132,15 @@ private:
     
     
     /*!
-     * Make the outer wall 'fuzzy'
+     * Special mode: Make the outer wall 'fuzzy'
      */
     void processFuzzySkin(SliceMeshStorage& mesh);
     
     
-
+    /*!
+     * Special mode: bulge the outer walls
+     */
+    void bulgeWalls(std::vector< Slicer* > slicerList, MeshGroup* meshgroup);
     
 };
 }//namespace cura
