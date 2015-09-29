@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <random> // for bulging effect?
 #include <functional> // for bugling?
+#include <cmath> // for bulging?
 
 #include "slicer.h"
 #include "utils/gettime.h"
@@ -492,10 +493,10 @@ void FffPolygonGenerator::bulgeWalls(std::vector< Slicer* > slicerList, MeshGrou
         auto getBulging = [](Point xy, int z)
         {
             std::hash<int> hash_fn;
-            int cell_size = MM2INT(0.1);
+            int cell_size = MM2INT(0.2);
             int cell_dim = 5; // surrounding taken into account
             double result = 0.0;
-            int bulging = MM2INT(7.0);
+            int bulging = MM2INT(10.0);
             Point3 middle(xy.X / cell_size, xy.Y / cell_size, z / cell_size);
             double total_weight = 0.0;
             for (int x = middle.x - cell_dim; x < middle.x + cell_dim; x++)
@@ -508,7 +509,7 @@ void FffPolygonGenerator::bulgeWalls(std::vector< Slicer* > slicerList, MeshGrou
                         int h = rand();
 //                         int h = hash_fn(x ^ (y << 8) ^ (z << 16));
                         double r = (double(h % 200000 - 100000))/100000.0; // between -1 and 1
-                        double weight = 1.0 / (1.0 + static_cast<double>(((Point3(xy.X, xy.Y, z) - Point3(x,y,z)* cell_size)).vSize()) / cell_size * 4);
+                        double weight = sqrt(1.0 / (1.0 + static_cast<double>(((Point3(xy.X, xy.Y, z) - Point3(x,y,z)* cell_size)).vSize()) * 4));
                         total_weight += weight;
                         result += r * weight ;
                     }
