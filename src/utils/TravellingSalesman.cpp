@@ -48,7 +48,8 @@ std::vector<Point> TravellingSalesman::findPath(std::vector<Point>& points,Point
         }
     }
     
-    std::vector<Waypoint*> shuffled(points.size()); //Convert all points to waypoints and shuffle them.
+    std::vector<Waypoint*> shuffled; //Convert all points to waypoints and shuffle them.
+    shuffled.reserve(points.size());
     for(Point& point : points)
     {
         Waypoint* waypoint = new Waypoint;
@@ -160,7 +161,8 @@ std::vector<Point> TravellingSalesman::findPath(std::vector<Point>& points,Point
     }
     
     //Now that we've inserted all points, linearise them into one vector.
-    std::vector<Point> result(shuffled.size() + 1);
+    std::vector<Point> result;
+    result.reserve(shuffled.size() + 1);
     while(path_start)
     {
         result.push_back(path_start->point);
@@ -182,7 +184,8 @@ std::vector<std::pair<Point,Point>> TravellingSalesman::findPath(std::vector<std
         return std::vector<std::pair<Point,Point>>(); //No lines to order.
     }
     
-    std::vector<Wayline*> shuffled(lines.size()); //Convert all lines to waylines and shuffle them.
+    std::vector<Wayline*> shuffled; //Convert all lines to waylines and shuffle them.
+    shuffled.reserve(lines.size());
     for(std::pair<Point,Point> line : lines)
     {
         Wayline* wayline = new Wayline;
@@ -346,7 +349,8 @@ std::vector<std::pair<Point,Point>> TravellingSalesman::findPath(std::vector<std
     }
     
     //Now that we've inserted all lines, linearise them into one vector.
-    std::vector<std::pair<Point,Point>> result(shuffled.size());
+    std::vector<std::pair<Point,Point>> result;
+    result.reserve(shuffled.size());
     for(;path_start;path_start = path_start->after)
     {
         result.push_back(path_start->line);
