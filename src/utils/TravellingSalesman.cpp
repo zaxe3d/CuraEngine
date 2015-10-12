@@ -161,9 +161,12 @@ std::vector<Point> TravellingSalesman::findPath(std::vector<Point>& points,Point
     
     //Now that we've inserted all points, linearise them into one vector.
     std::vector<Point> result(shuffled.size() + 1);
-    for(;path_start;path_start = path_start->after)
+    while(path_start)
     {
         result.push_back(path_start->point);
+        Waypoint* to_delete = path_start;
+        path_start = path_start->after;
+        delete to_delete;
     }
     return result;
 }
