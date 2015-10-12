@@ -60,7 +60,6 @@ std::vector<Point> TravellingSalesman::findPath(std::vector<Point>& points,Point
     auto rng = std::default_random_engine(1337); //Always use a fixed seed! Wouldn't want it to be nondeterministic.
     std::shuffle(shuffled.begin(),shuffled.end(),rng); //"Randomly" shuffles the waypoints.
     
-    
     //Make a beginning of the path depending on whether or not we have a starting point.
     Waypoint* path_start;
     size_t next_to_insert = 0; //Due to the check at the start, we know that shuffled always contains at least 1 element.
@@ -131,6 +130,7 @@ std::vector<Point> TravellingSalesman::findPath(std::vector<Point>& points,Point
         }
         assert(best_insertion); //The nearby vector was empty!
         //Actually insert the waypoint at the best position we found.
+        bucket_grid.insert(best_insertion->point,best_insertion);
         if(insert_after)
         {
             if(best_insertion->after)
