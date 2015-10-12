@@ -87,7 +87,7 @@ std::vector<Point> TravellingSalesman::findPath(std::vector<Point>& points,Point
         for(Waypoint* nearby_waypoint : nearby)
         {
             //First try inserting before.
-            if(starting_point && *starting_point != nearby_waypoint->point) //Never insert before the starting point if we have any.
+            if(!starting_point || *starting_point != nearby_waypoint->point) //Never insert before the starting point if we have any.
             {
                 float insertion_distance;
                 if(!nearby_waypoint->before) //Beginning of the path.
