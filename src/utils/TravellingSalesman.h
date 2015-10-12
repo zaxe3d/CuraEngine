@@ -46,6 +46,7 @@ public:
      * \param points The waypoints past which the path must run.
      * \param starting_point A fixed starting point of the path, if any. If this
      * is <em>nullptr</em>, the path may start at any waypoint.
+     * \return A vector of points, in an order that would make a short path.
      */
     std::vector<Point> findPath(std::vector<Point>& points,Point* starting_point = nullptr);
     
