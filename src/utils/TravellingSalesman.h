@@ -16,6 +16,13 @@ struct Waypoint
     Point point;
 };
 
+struct Wayline
+{
+    Wayline* before;
+    Wayline* after;
+    std::pair<Point,Point> line;
+};
+
 /*!
  * \brief A class of functions implementing solutions of Travelling Salesman.
  * 
@@ -50,6 +57,28 @@ public:
      */
     std::vector<Point> findPath(std::vector<Point>& points,Point* starting_point = nullptr);
     
+    /*!
+     * \brief Computes a short path along all specified lines.
+     * 
+     * A short path is computed that includes all specified lines, but not
+     * always the shortest path. Finding the shortest path reduces to the
+     * Travelling Salesman Problem, and this is an NP-complete problem. The
+     * solution returned by this function is just an approximation.
+     * <p>The lines are specified by pairs of points. The lines may be reversed
+     * if that results in a shorter path.</p>
+     * <p>The result is also a vector of pairs of points. This should be
+     * interpreted in order and with the first of the pair as starting point and
+     * the second of the pair as ending point. If a starting point is provided,
+     * it will not be included in the result.</p>
+     * 
+     * \param lines the waylines past which the path must run.
+     * \param starting_point A fixed starting point of the path, if any. If this
+     * is <em>nullptr</em>, the path may start at any wayline.
+     * \return A vector of pairs of points, each representing one line, that
+     * when concatenated would make a short path past all specified lines.
+     */
+    std::vector<std::pair<Point,Point>> findPath(std::vector<std::pair<Point,Point>>& lines,Point* starting_point = nullptr);
+    
 private:
     /*!
      * \brief Helper function to compute the distance from A to B.
@@ -61,7 +90,7 @@ private:
      * \param b The second point to compute the distance to, B.
      * \return The distance from A to B.
      */
-    float distance(cura::Waypoint a,cura::Waypoint b);
+    float distance(cura::Point a,cura::Point b);
 };
 
 }
