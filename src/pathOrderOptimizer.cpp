@@ -2,6 +2,7 @@
 #include "pathOrderOptimizer.h"
 #include "utils/logoutput.h"
 #include "utils/BucketGrid2D.h"
+#include "utils/TravellingSalesman.h"
 
 #define INLINE static inline
 
@@ -147,7 +148,26 @@ int PathOrderOptimizer::getFarthestPointInPolygon(int poly_idx)
 */
 void LineOrderOptimizer::optimize()
 {
-    int gridSize = 5000; // the size of the cells in the hash grid.
+    std::vector<std::pair<Point,Point>> lines;
+    lines.reserve(polygons.size());
+    for(size_t polygon = 0;polygon < polygons.size();polygon++) //Convert polygon to pairs of points, to represent lines.
+    {
+        assert(polygons[polygon].size() == 2);
+        std::pair<Point,Point> line;
+        line.first = polygons[polygon][0];
+        line.second = polygons[polygon][1];
+        lines.push_back(line);
+    }
+    TravellingSalesman tspsolver;
+    std::vector<std::pair<Point,Point>> optimised = tspsolver.findPath(lines,&startPoint);
+    for(std::pair<Point,Point>& line : optimised)
+    {
+        std::cout << line.first << " -- " << line.second << std::endl;
+    }
+    
+    
+    
+    /*int gridSize = 5000; // the size of the cells in the hash grid.
     BucketGrid2D<unsigned int> line_bucket_grid(gridSize);
     bool picked[polygons.size()];
     memset(picked, false, sizeof(bool) * polygons.size());/// initialized as falses
@@ -219,9 +239,9 @@ void LineOrderOptimizer::optimize()
         }
         else
             logError("Failed to find next closest line.\n");
-    }
+    }*/
 
-    prev_point = startPoint;
+    Point prev_point = startPoint;
     for(unsigned int n=0; n<polyOrder.size(); n++) /// decide final starting points in each polygon
     {
         int nr = polyOrder[n];
