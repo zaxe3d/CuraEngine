@@ -1,9 +1,5 @@
-/* 
- * File:   TravellingSalesman.cpp
- * Author: Ruben Dulek <Ruben at Ultimaker>
- * 
- * Created on 09 October 2015, 17:31
- */
+//Copyright (c) 2015 Ultimaker B.V.
+//CuraEngine is released under the terms of the AGPLv3 or higher.
 
 #include "TravellingSalesman.h"
 
