@@ -238,9 +238,9 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPathNoReverse(std::v
     while(path_start)
     {
         result.push_back(path_start->element);
-        Waypoint<E>* to_delete = path_start;
-        path_start = path_start->after;
-        delete to_delete;
+        Waypoint<E>* to_delete = path_start; //Pick the next element from the list.
+        path_start = path_start->after; //And remove it from the list.
+        delete to_delete; //Free each waypoint from memory. They are no longer required.
     }
     return result;
 }
