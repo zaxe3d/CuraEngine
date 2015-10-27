@@ -80,7 +80,6 @@ set(engine_SRCS # Except main.cpp.
     src/utils/logoutput.cpp
     src/utils/polygonUtils.cpp
     src/utils/polygon.cpp
-    src/utils/TravellingSalesman.cpp
 )
 
 # List of tests. For each test there must be a file tests/${NAME}.cpp and a file tests/${NAME}.h.

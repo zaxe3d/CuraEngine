@@ -148,21 +148,20 @@ int PathOrderOptimizer::getFarthestPointInPolygon(int poly_idx)
 */
 void LineOrderOptimizer::optimize()
 {
-    std::vector<std::pair<Point,Point>> lines;
-    lines.reserve(polygons.size());
-    for(size_t polygon = 0;polygon < polygons.size();polygon++) //Convert polygon to pairs of points, to represent lines.
+    TravellingSalesman<PolygonRef> tspsolver([&](PolygonRef polygon) -> Point
+        {
+            return polygon[0];
+        }
+        ,[&](PolygonRef polygon) -> Point
+        {
+            return polygon[polygon.size() - 1];
+        }
+    );
+    std::vector<bool> reverse_polygons;
+    std::vector<PolygonRef> optimised = tspsolver.findPath(polygons,reverse_polygons,&startPoint);
+    for(PolygonRef& line : optimised)
     {
-        assert(polygons[polygon].size() == 2);
-        std::pair<Point,Point> line;
-        line.first = polygons[polygon][0];
-        line.second = polygons[polygon][1];
-        lines.push_back(line);
-    }
-    TravellingSalesman tspsolver;
-    std::vector<std::pair<Point,Point>> optimised = tspsolver.findPath(lines,&startPoint);
-    for(std::pair<Point,Point>& line : optimised)
-    {
-        std::cout << line.first << " -- " << line.second << std::endl;
+        std::cout << line[0] << " -- " << line[line.size() - 1] << std::endl;
     }
     
     
