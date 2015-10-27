@@ -14,11 +14,17 @@ namespace cura
 
 template<class E> struct Waypoint
 {
+    Waypoint()
+    {
+        //Do nothing.
+    }
+    
     Waypoint* before;
     Waypoint* after;
     Point start_point;
     Point end_point;
-    E element;
+    E* element;
+    bool is_reversed; //TODO: This messes up the alignment completely!
 };
 
 /*!
@@ -128,7 +134,155 @@ template<class E> TravellingSalesman<E>::~TravellingSalesman()
 
 template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> elements,std::vector<bool>& reversed_elements,Point* starting_point)
 {
-    return std::vector<E>();
+    /* This approximation algorithm of TSP implements the random insertion
+     * heuristic. Random insertion has in tests proven to be almost as good as
+     * Christofides (111% of the optimal path length rather than 110% on random
+     * graphs) but is much faster to compute. */
+    if(elements.empty())
+    {
+        return std::vector<E>();
+    }
+    
+    std::vector<Waypoint<E>*> shuffled; //Convert all points to waypoints and shuffle them.
+    shuffled.reserve(elements.size());
+    for(E& element : elements)
+    {
+        Waypoint<E>* waypoint = new Waypoint<E>;
+        waypoint->before = nullptr;
+        waypoint->after = nullptr;
+        waypoint->start_point = get_start(element);
+        waypoint->end_point = get_end(element);
+        waypoint->element = &element;
+        shuffled.push_back(waypoint);
+    }
+    auto rng = std::default_random_engine(1337); //Always use a fixed seed! Wouldn't want it to be nondeterministic.
+    std::shuffle(shuffled.begin(),shuffled.end(),rng); //"Randomly" shuffles the waypoints.
+    
+    //Make a beginning of the path depending on whether or not we have a starting point.
+    Waypoint<E>* path_start;
+    size_t next_to_insert = 0; //Due to the check at the start, we know that shuffled always contains at least 1 element.
+    if(starting_point) //If we have a fixed starting point, insert it first.
+    {
+        path_start = new Waypoint<E>;
+        path_start->before = nullptr;
+        path_start->after = nullptr;
+        //Note: The start point of this waypoint is never set, since it should not be used. There should never be anything before the startpoint.
+        path_start->end_point = *starting_point;
+    }
+    else //We don't have a fixed starting point, so take the first element to begin with. In the loop later we will then also allow inserting before this point.
+    {
+        path_start = shuffled[next_to_insert++];
+    }
+    
+    for(;next_to_insert < shuffled.size();next_to_insert++) //Now randomly insert the rest of the points.
+    {
+        Waypoint<E>* waypoint = shuffled[next_to_insert];
+        float best_insertion_distance = std::numeric_limits<float>::infinity(); //Minimise this distance.
+        bool best_insertion_direction; //Direction of how to insert the element. False is normal. True is reverse.
+        Waypoint<E>* best_insertion = nullptr;
+        if(!starting_point) //We have no starting point, so inserting before the first point is also allowed.
+        {
+            float forward_distance = distance(waypoint->end_point,path_start->start_point);
+            float reverse_distance = distance(waypoint->start_point,path_start->start_point); //Also try inserting backwards.
+            if(forward_distance < reverse_distance)
+            {
+                best_insertion_distance = reverse_distance;
+                best_insertion_direction = true;
+            }
+            else
+            {
+                best_insertion_direction = false; //Since this is the first iteration, it is always the shortest distance.
+            }
+            //Leave best_insertion at nullptr. This is to indicate that it must be inserted before the entire path!
+        }
+        for(Waypoint<E>* insert_after = path_start;insert_after != nullptr;insert_after = insert_after->after) //Loop through the current path to determine where to insert it.
+        {
+            float insertion_distance;
+            bool insertion_direction;
+            if(!insert_after->after) //End of the path.
+            {
+                float forward_distance = distance(insert_after->end_point,waypoint->start_point); //Just one distance to compute per direction.
+                float reverse_distance = distance(insert_after->end_point,waypoint->end_point);
+                if(forward_distance < reverse_distance)
+                {
+                    insertion_distance = forward_distance;
+                    insertion_direction = false;
+                }
+                else
+                {
+                    insertion_distance = reverse_distance;
+                    insertion_direction = true;
+                }
+            }
+            else //Somewhere in the middle of the path.
+            {
+                float removed_distance = distance(insert_after->end_point,insert_after->after->start_point); //Distance of the original move that we'll remove.
+                float before_distance = distance(insert_after->end_point,waypoint->start_point); //Distance from current path to waypoint.
+                float after_distance = distance(waypoint->end_point,insert_after->start_point); //Distance from waypoint to current path.
+                float forward_distance = before_distance + after_distance - removed_distance;
+                //For reverse, removed_distance is the same.
+                before_distance = distance(insert_after->end_point,waypoint->end_point); //Distance from current path to waypoint.
+                after_distance = distance(waypoint->start_point,insert_after->start_point);
+                float reverse_distance = before_distance + after_distance - removed_distance;
+                if(forward_distance < reverse_distance)
+                {
+                    insertion_distance = forward_distance;
+                    insertion_direction = false;
+                }
+                else
+                {
+                    insertion_distance = forward_distance;
+                    insertion_direction = true;
+                }
+            }
+            if(insertion_distance < best_insertion_distance) //Hey! We found a new best place to insert this.
+            {
+                best_insertion = insert_after;
+                best_insertion_distance = insertion_distance;
+                best_insertion_direction = insertion_direction;
+            }
+        }
+        //Actually insert the waypoint at the best position and orientation we found.
+        waypoint->is_reversed = best_insertion_direction;
+        if(best_insertion_direction) //Should insert in reverse direction.
+        {
+            Point temp = waypoint->start_point; //Swap before and after.
+            waypoint->start_point = waypoint->end_point;
+            waypoint->end_point = temp;
+        }
+        if(!best_insertion) //If this is nullptr, it should be inserted before the start of the path.
+        {
+            path_start->before = waypoint; //Link the two together.
+            waypoint->after = path_start;
+            path_start = waypoint; //Be sure to update the start of the path.
+        }
+        else //Insert after the best_insertion waypoint.
+        {
+            if(best_insertion->after) //Not the last waypoint.
+            {
+                Waypoint<E>* best_after = best_insertion->after;
+                best_after->before = waypoint;
+                waypoint->after = best_after;
+            }
+            best_insertion->after = waypoint;
+            waypoint->before = best_insertion;
+        }
+    }
+    
+    //Now that we've inserted all points, linearise them into one vector.
+    std::vector<E> result;
+    result.reserve(shuffled.size());
+    reversed_elements.clear(); //Prepare the reversed_elements vector for storing whether elements should be reversed.
+    reversed_elements.reserve(shuffled.size());
+    while(path_start)
+    {
+        result.push_back(*path_start->element);
+        Waypoint<E>* to_delete = path_start; //Pick the next element from the list.
+        path_start = path_start->after; //And remove it from the list.
+        delete to_delete; //Free each waypoint from memory. They are no longer required.
+        reversed_elements.push_back(path_start->is_reversed);
+    }
+    return result;
 }
 
 template<class E> std::vector<E> TravellingSalesman<E>::findPathNoReverse(std::vector<E> elements,Point* starting_point)
@@ -192,14 +346,14 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPathNoReverse(std::v
             best_insertion_distance = distance(waypoint->end_point,path_start->start_point); //Since this is the first iteration, it is always the shortest distance.
             //Leave best_insertion at nullptr. This is to indicate that it must be inserted before the entire path!
         }
-        for(Waypoint<E>* insert_after = path_start;insert_after != nullptr;insert_after = insert_after.after) //Loop through the current path to determine where to insert it.
+        for(Waypoint<E>* insert_after = path_start;insert_after != nullptr;insert_after = insert_after->after) //Loop through the current path to determine where to insert it.
         {
             float insertion_distance;
             if(!insert_after->after) //End of the path.
             {
                 insertion_distance = distance(insert_after->end_point,waypoint->start_point); //Just one distance to compute.
             }
-            else
+            else //Somewhere in the middle of the path.
             {
                 float removed_distance = distance(insert_after->end_point,insert_after->after->start_point); //Distance of the original move that we'll remove.
                 float before_distance = distance(insert_after->end_point,waypoint->start_point); //Distance from current path to waypoint.
