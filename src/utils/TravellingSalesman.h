@@ -414,6 +414,7 @@ template<class E> std::vector<Waypoint<E>*> TravellingSalesman<E>::fillWaypoints
         waypoint->element = &element;
         waypoint->start_point = get_start(element);
         waypoint->end_point = get_end(element);
+        result.push_back(waypoint);
     }
     return result;
 }
