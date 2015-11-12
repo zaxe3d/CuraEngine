@@ -148,22 +148,42 @@ int PathOrderOptimizer::getFarthestPointInPolygon(int poly_idx)
 */
 void LineOrderOptimizer::optimize()
 {
-    TravellingSalesman<PolygonRef> tspsolver([&](PolygonRef polygon) -> Point
+    TravellingSalesman<int> tspsolver([&](int polygon_index) -> Point
         {
-            return polygon[0];
+            return polygons[polygon_index][0];
         }
-        ,[&](PolygonRef polygon) -> Point
+        ,[&](int polygon_index) -> Point
         {
-            return polygon[polygon.size() - 1];
+            return polygons[polygon_index][polygons[polygon_index].size() - 1];
         }
     );
     std::vector<bool> reverse_polygons;
-    std::vector<PolygonRef> optimised = tspsolver.findPath(polygons,reverse_polygons,&startPoint);
-    for(PolygonRef& line : optimised)
+    std::vector<int> unoptimised;
+    unoptimised.reserve(polygons.size());
+    for(size_t index = 0;index < polygons.size();index++)
     {
-        std::cout << line[0] << " -- " << line[line.size() - 1] << std::endl;
+        unoptimised.push_back(static_cast<int>(index));
+    }
+    std::vector<int> optimised = tspsolver.findPath(unoptimised,reverse_polygons,&startPoint);
+    for(int line : optimised)
+    {
+        std::cout << polygons[line][0] << " -- " << polygons[line][polygons[line].size() - 1] << std::endl;
     }
     
+    polyOrder.reserve(optimised.size());
+    polyStart.reserve(optimised.size());
+    for(size_t polygon = 0;polygon < optimised.size();polygon++)
+    {
+        polyOrder.push_back(optimised[polygon]);
+        if(reverse_polygons[polygon])
+        {
+            polyStart.push_back(polygons[optimised[polygon]].size() - 1); //If we're traversing in reverse, start at the end of this polygon.
+        }
+        else
+        {
+            polyStart.push_back(0);
+        }
+    }
     
     
     /*int gridSize = 5000; // the size of the cells in the hash grid.
@@ -238,7 +258,7 @@ void LineOrderOptimizer::optimize()
         }
         else
             logError("Failed to find next closest line.\n");
-    }*/
+    }
 
     Point prev_point = startPoint;
     for(unsigned int n=0; n<polyOrder.size(); n++) /// decide final starting points in each polygon
@@ -267,7 +287,7 @@ void LineOrderOptimizer::optimize()
         assert(poly.size() == 2);
         prev_point = poly[best *-1 + 1]; /// 1 -> 0 , 0 -> 1
 
-    }
+    }*/
 }
 
 inline void LineOrderOptimizer::checkIfLineIsBest(unsigned int i_line_polygon, int& best, float& bestDist, Point& prev_point, Point& incommingPerpundicularNormal)
