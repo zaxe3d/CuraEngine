@@ -266,14 +266,14 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             }
             else //Inserting in reverse is allowed. This means that we must try the reverse direction and also check which endpoint of the other waypoints we must latch onto.
             {
-                int64_t distance = vSize(waypoint->end_point - ((*result.begin())->is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point)); //From end of this element to 'start' of next element.
+                int64_t distance = vSize(waypoint->end_point - (*result.begin())->start_point); //From end of this element to 'start' of next element.
                 if(distance < best_distance)
                 {
                     best_distance = distance;
                     best_direction = false;
                     best_insert = result.begin();
                 }
-                distance = vSize(waypoint->start_point - ((*result.begin())->is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point)); //From start of this element to 'start' of next element.
+                distance = vSize(waypoint->start_point - (*result.begin())->start_point); //From start of this element to 'start' of next element.
                 if(distance < best_distance)
                 {
                     best_distance = distance;
@@ -299,7 +299,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                 }
                 else //Inserting in reverse is allowed.
                 {
-                    int64_t distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - waypoint->start_point); //From 'end' of previous element to start of this element.
+                    int64_t distance = vSize((*before_insert)->end_point - waypoint->start_point); //From 'end' of previous element to start of this element.
                     if(distance < best_distance)
                     {
                         best_distance = distance;
@@ -307,7 +307,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                         best_insert = after_insert;
                     }
                     //Try reverse too.
-                    distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - waypoint->end_point); //From 'end' of previous element to end of this element.
+                    distance = vSize((*before_insert)->end_point - waypoint->end_point); //From 'end' of previous element to end of this element.
                     if(distance < best_distance)
                     {
                         best_distance = distance;
@@ -332,9 +332,9 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                 }
                 else
                 {
-                    int64_t removed_distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - ((*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point)); //From 'end' of previous element to 'start' of next element.
-                    int64_t before_distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - waypoint->start_point); //From 'end' of previous element to start of this element.
-                    int64_t after_distance = vSize(waypoint->end_point - ((*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point)); //From end of this element to 'start' of next element.
+                    int64_t removed_distance = vSize((*before_insert)->end_point - (*after_insert)->start_point); //From 'end' of previous element to 'start' of next element.
+                    int64_t before_distance = vSize((*before_insert)->end_point - waypoint->start_point); //From 'end' of previous element to start of this element.
+                    int64_t after_distance = vSize(waypoint->end_point - (*after_insert)->start_point); //From end of this element to 'start' of next element.
                     int64_t distance = before_distance + after_distance - removed_distance;
                     if(distance < best_distance)
                     {
@@ -343,8 +343,8 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                         best_insert = after_insert;
                     }
                     //Try reverse too.
-                    before_distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - waypoint->end_point); //From 'end' of previous element to end of this element.
-                    after_distance = vSize(waypoint->start_point - ((*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point)); //From start of this element to 'start' of next element.
+                    before_distance = vSize((*before_insert)->end_point - waypoint->end_point); //From 'end' of previous element to end of this element.
+                    after_distance = vSize(waypoint->start_point - (*after_insert)->start_point); //From start of this element to 'start' of next element.
                     distance = before_distance + after_distance - removed_distance;
                     if(distance < best_distance)
                     {
@@ -357,9 +357,15 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
         }
         //Actually insert the waypoint at the best position we found.
         waypoint->is_reversed = best_direction; //Will remain false if allow_reverse is false.
+        if(best_direction) //We also need to swap the start and end points in this waypoint.
+        {
+            Point temp = waypoint->start_point;
+            waypoint->start_point = waypoint->end_point;
+            waypoint->end_point = temp;
+        }
         if(best_insert == result.end()) //We must insert at the very start.
         {
-            result.push_front(waypoint);
+            result.push_back(waypoint);
         }
         else //We must insert after best_insert.
         {
