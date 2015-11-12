@@ -255,24 +255,15 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
         ListElement best_insert; //Where to insert the element. It will be inserted after this element. If it's nullptr, insert at the very front.
         if(!starting_point) //We have no starting point, so inserting before the first point is also allowed.
         {
-            if(!allow_reverse)
+            int64_t distance = vSize(waypoint->end_point - (*result.begin())->start_point); //From end of this element to start of next element.
+            if(distance < best_distance)
             {
-                int64_t distance = vSize(waypoint->end_point - (*result.begin())->start_point); //From end of this element to start of next element.
-                if(distance < best_distance)
-                {
-                    best_distance = distance;
-                    best_insert = result.begin();
-                }
+                best_distance = distance;
+                best_direction = false;
+                best_insert = result.begin();
             }
-            else //Inserting in reverse is allowed. This means that we must try the reverse direction and also check which endpoint of the other waypoints we must latch onto.
+            if(allow_reverse) //Inserting in reverse is allowed. This means that we must try the reverse direction.
             {
-                int64_t distance = vSize(waypoint->end_point - (*result.begin())->start_point); //From end of this element to 'start' of next element.
-                if(distance < best_distance)
-                {
-                    best_distance = distance;
-                    best_direction = false;
-                    best_insert = result.begin();
-                }
                 distance = vSize(waypoint->start_point - (*result.begin())->start_point); //From start of this element to 'start' of next element.
                 if(distance < best_distance)
                 {
@@ -288,25 +279,15 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             after_insert++; //Get the element after the current element.
             if(after_insert == result.end()) //There is no next element. We're inserting at the end of the path.
             {
-                if(!allow_reverse)
+                int64_t distance = vSize((*before_insert)->end_point - waypoint->start_point); //From end of previous element to start of this element.
+                if(distance < best_distance)
                 {
-                    int64_t distance = vSize((*before_insert)->end_point - waypoint->start_point); //From end of previous element to start of this element.
-                    if(distance < best_distance)
-                    {
-                        best_distance = distance;
-                        best_insert = after_insert;
-                    }
+                    best_distance = distance;
+                    best_direction = false;
+                    best_insert = after_insert;
                 }
-                else //Inserting in reverse is allowed.
+                if(allow_reverse) //Inserting in reverse is allowed.
                 {
-                    int64_t distance = vSize((*before_insert)->end_point - waypoint->start_point); //From 'end' of previous element to start of this element.
-                    if(distance < best_distance)
-                    {
-                        best_distance = distance;
-                        best_direction = false;
-                        best_insert = after_insert;
-                    }
-                    //Try reverse too.
                     distance = vSize((*before_insert)->end_point - waypoint->end_point); //From 'end' of previous element to end of this element.
                     if(distance < best_distance)
                     {
@@ -318,31 +299,18 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             }
             else //There is a next element. We're inserting somewhere in the middle.
             {
-                if(!allow_reverse)
+                int64_t removed_distance = vSize((*before_insert)->end_point - (*after_insert)->start_point); //Distance of the original move that we'll remove.
+                int64_t before_distance = vSize((*before_insert)->end_point - waypoint->start_point); //From end of previous element to start of this element.
+                int64_t after_distance = vSize(waypoint->end_point - (*after_insert)->start_point); //From end of this element to start of next element.
+                int64_t distance = before_distance + after_distance - removed_distance;
+                if(distance < best_distance)
                 {
-                    int64_t removed_distance = vSize((*before_insert)->end_point - (*after_insert)->start_point); //Distance of the original move that we'll remove.
-                    int64_t before_distance = vSize((*before_insert)->end_point - waypoint->start_point); //From end of previous element to start of this element.
-                    int64_t after_distance = vSize(waypoint->end_point - (*after_insert)->start_point); //From end of this element to start of next element.
-                    int64_t distance = before_distance + after_distance - removed_distance;
-                    if(distance < best_distance)
-                    {
-                        best_distance = distance;
-                        best_insert = after_insert;
-                    }
+                    best_distance = distance;
+                    best_direction = false;
+                    best_insert = after_insert;
                 }
-                else
+                if(allow_reverse) //Try reverse too.
                 {
-                    int64_t removed_distance = vSize((*before_insert)->end_point - (*after_insert)->start_point); //From 'end' of previous element to 'start' of next element.
-                    int64_t before_distance = vSize((*before_insert)->end_point - waypoint->start_point); //From 'end' of previous element to start of this element.
-                    int64_t after_distance = vSize(waypoint->end_point - (*after_insert)->start_point); //From end of this element to 'start' of next element.
-                    int64_t distance = before_distance + after_distance - removed_distance;
-                    if(distance < best_distance)
-                    {
-                        best_distance = distance;
-                        best_direction = false;
-                        best_insert = after_insert;
-                    }
-                    //Try reverse too.
                     before_distance = vSize((*before_insert)->end_point - waypoint->end_point); //From 'end' of previous element to end of this element.
                     after_distance = vSize(waypoint->start_point - (*after_insert)->start_point); //From start of this element to 'start' of next element.
                     distance = before_distance + after_distance - removed_distance;
