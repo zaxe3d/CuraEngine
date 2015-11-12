@@ -245,19 +245,18 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
     std::list<Waypoint<E>*> result;
     
     //Make a beginning of the path depending on whether or not we have a starting point.
-    Waypoint<E>* path_start;
     size_t next_to_insert = 0; //Due to the check at the start, we know that shuffled always contains at least 1 element.
     if(starting_point) //If we have a fixed starting point, insert it first.
     {
-        path_start = new Waypoint<E>;
+        Waypoint<E>* path_start = new Waypoint<E>;
         //Note: The start point of this waypoint is never set, since it should not be used. There should never be anything before the startpoint.
         path_start->end_point = *starting_point;
+        result.push_back(path_start);
     }
     else //We don't have a fixed starting point, so take the first element to begin with. In the loop later we will then also allow inserting before this point.
     {
-        path_start = shuffle[next_to_insert++];
+        result.push_back(shuffle[next_to_insert++]);
     }
-    result.push_back(path_start);
     
     for(;next_to_insert < shuffle.size();next_to_insert++) //Now randomly insert the rest of the points.
     {
@@ -269,7 +268,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
         {
             if(!allow_reverse)
             {
-                float this_distance = distance(waypoint->end_point,path_start->start_point); //From end of this element to start of next element.
+                float this_distance = distance(waypoint->end_point,(*result.begin())->start_point); //From end of this element to start of next element.
                 if(this_distance < best_distance)
                 {
                     best_distance = this_distance;
@@ -277,13 +276,13 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             }
             else //Inserting in reverse is allowed. This means that we must try the reverse direction and also check which endpoint of the other waypoints we must latch onto.
             {
-                float this_distance = distance(waypoint->end_point,path_start->is_reversed ? path_start->end_point : path_start->start_point); //From end of this element to 'start' of next element.
+                float this_distance = distance(waypoint->end_point,(*result.begin())->is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point); //From end of this element to 'start' of next element.
                 if(this_distance < best_distance)
                 {
                     best_distance = this_distance;
                     best_direction = false;
                 }
-                this_distance = distance(waypoint->start_point,path_start-> is_reversed ? path_start->end_point : path_start->start_point); //From start of this element to 'start' of next element.
+                this_distance = distance(waypoint->start_point,(*result.begin())-> is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point); //From start of this element to 'start' of next element.
                 if(this_distance < best_distance)
                 {
                     best_distance = this_distance;
