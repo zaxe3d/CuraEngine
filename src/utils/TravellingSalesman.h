@@ -252,7 +252,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
         Waypoint<E>* waypoint = shuffle[next_to_insert];
         int64_t best_distance = std::numeric_limits<int64_t>::max(); //Minimise this distance.
         bool best_direction = false; //Direction of how to insert the element. False is normal. True is reverse.
-        ListElement best_insert = result.end(); //Where to insert the element. It will be inserted after this element. If it's result.end(), insert at the very front. Sorry, it is the only unused value.
+        ListElement best_insert; //Where to insert the element. It will be inserted after this element. If it's nullptr, insert at the very front.
         if(!starting_point) //We have no starting point, so inserting before the first point is also allowed.
         {
             if(!allow_reverse)
@@ -261,6 +261,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                 if(distance < best_distance)
                 {
                     best_distance = distance;
+                    best_insert = result.begin();
                 }
             }
             else //Inserting in reverse is allowed. This means that we must try the reverse direction and also check which endpoint of the other waypoints we must latch onto.
@@ -270,15 +271,16 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                 {
                     best_distance = distance;
                     best_direction = false;
+                    best_insert = result.begin();
                 }
                 distance = vSize(waypoint->start_point - ((*result.begin())->is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point)); //From start of this element to 'start' of next element.
                 if(distance < best_distance)
                 {
                     best_distance = distance;
                     best_direction = true;
+                    best_insert = result.begin();
                 }
             }
-            //Leave best_insertion at result.end(). This is to indicate that it must be inserted before the entire path!
         }
         for(ListElement before_insert = result.begin();before_insert != result.end();before_insert++)
         {
@@ -292,7 +294,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                     if(distance < best_distance)
                     {
                         best_distance = distance;
-                        best_insert = before_insert;
+                        best_insert = after_insert;
                     }
                 }
                 else //Inserting in reverse is allowed.
@@ -302,7 +304,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                     {
                         best_distance = distance;
                         best_direction = false;
-                        best_insert = before_insert;
+                        best_insert = after_insert;
                     }
                     //Try reverse too.
                     distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - waypoint->end_point); //From 'end' of previous element to end of this element.
@@ -310,7 +312,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                     {
                         best_distance = distance;
                         best_direction = true;
-                        best_insert = before_insert;
+                        best_insert = after_insert;
                     }
                 }
             }
@@ -325,7 +327,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                     if(distance < best_distance)
                     {
                         best_distance = distance;
-                        best_insert = before_insert;
+                        best_insert = after_insert;
                     }
                 }
                 else
@@ -338,7 +340,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                     {
                         best_distance = distance;
                         best_direction = false;
-                        best_insert = before_insert;
+                        best_insert = after_insert;
                     }
                     //Try reverse too.
                     before_distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - waypoint->end_point); //From 'end' of previous element to end of this element.
@@ -348,7 +350,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                     {
                         best_distance = distance;
                         best_direction = true;
-                        best_insert = before_insert;
+                        best_insert = after_insert;
                     }
                 }
             }
