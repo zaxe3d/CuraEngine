@@ -149,7 +149,7 @@ int PathOrderOptimizer::getFarthestPointInPolygon(int poly_idx)
 void LineOrderOptimizer::optimize()
 {
     //Create the TSP solver that will solve all our problems.
-    TravellingSalesman<int> tspsolver([&](int polygon_index) -> Point
+    TravellingSalesman<size_t> tspsolver([&](size_t polygon_index) -> Point
         {
             return polygons[polygon_index][0];
         }
@@ -159,20 +159,20 @@ void LineOrderOptimizer::optimize()
         }
     );
     std::vector<bool> reverse_polygons;
-    std::vector<int> unoptimised;
+    std::vector<size_t> unoptimised;
     unoptimised.reserve(polygons.size()); //We have to convert the polygons to their indices before shuffling in order to be able to output indices.
     for(size_t index = 0;index < polygons.size();index++)
     {
-        unoptimised.push_back(static_cast<int>(index));
+        unoptimised.push_back(index);
     }
-    std::vector<int> optimised = tspsolver.findPath(unoptimised,reverse_polygons,&startPoint); //Approximate the solution with the TSP solver.
+    std::vector<size_t> optimised = tspsolver.findPath(unoptimised,reverse_polygons,&startPoint); //Approximate the solution with the TSP solver.
     
     //Actually put the paths in their correct order for the output.
     polyOrder.reserve(optimised.size());
     polyStart.reserve(optimised.size());
     for(size_t polygon = 0;polygon < optimised.size();polygon++)
     {
-        polyOrder.push_back(optimised[polygon]);
+        polyOrder.push_back(static_cast<int>(optimised[polygon]));
         if(reverse_polygons[polygon])
         {
             polyStart.push_back(polygons[optimised[polygon]].size() - 1); //If we're traversing in reverse, start at the end of this polygon.
