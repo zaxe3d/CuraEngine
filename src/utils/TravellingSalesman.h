@@ -51,7 +51,7 @@ template<class E> struct Waypoint
     /*!
      * \brief The actual element this waypoint holds.
      */
-    E* element;
+    E element;
     
     /*!
      * \brief Whether or not this element should be reversed in the eventual
@@ -386,7 +386,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
     }
     for(Waypoint<E>* waypoint : result)
     {
-        result_vector.push_back(*(waypoint->element));
+        result_vector.push_back(waypoint->element);
         if(allow_reverse)
         {
             reversed_elements->push_back(waypoint->is_reversed);
@@ -411,7 +411,7 @@ template<class E> std::vector<Waypoint<E>*> TravellingSalesman<E>::fillWaypoints
     for(E element : elements) //Put every element in a waypoint.
     {
         Waypoint<E>* waypoint = new Waypoint<E>(); //Yes, this must be deleted when the algorithm is done!
-        waypoint->element = &element;
+        waypoint->element = element;
         waypoint->start_point = get_start(element);
         waypoint->end_point = get_end(element);
         result.push_back(waypoint);
