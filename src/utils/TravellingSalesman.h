@@ -178,18 +178,6 @@ protected:
     
 private:
     /*!
-     * \brief Helper function to compute the distance from A to B.
-     * 
-     * This method is written because the built-in <em>vSizeMM</em> function of
-     * Clipper converts to double, which is overkill for this application.
-     * 
-     * \param a The first point to compute the distance from, A.
-     * \param b The second point to compute the distance to, B.
-     * \return The distance from A to B.
-     */
-    float distance(cura::Point a,cura::Point b);
-    
-    /*!
      * \brief Puts all elements in waypoints, caching their endpoints.
      * 
      * The <em>get_start</em> and <em>get_end</em> functions are called on each
@@ -262,31 +250,31 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
     for(;next_to_insert < shuffle.size();next_to_insert++) //Now randomly insert the rest of the points.
     {
         Waypoint<E>* waypoint = shuffle[next_to_insert];
-        float best_distance = std::numeric_limits<float>::infinity(); //Minimise this distance.
+        int64_t best_distance = std::numeric_limits<int64_t>::max(); //Minimise this distance.
         bool best_direction = false; //Direction of how to insert the element. False is normal. True is reverse.
         ListElement best_insert = result.end(); //Where to insert the element. It will be inserted after this element. If it's result.end(), insert at the very front. Sorry, it is the only unused value.
         if(!starting_point) //We have no starting point, so inserting before the first point is also allowed.
         {
             if(!allow_reverse)
             {
-                float this_distance = distance(waypoint->end_point,(*result.begin())->start_point); //From end of this element to start of next element.
-                if(this_distance < best_distance)
+                int64_t distance = vSize(waypoint->end_point - (*result.begin())->start_point); //From end of this element to start of next element.
+                if(distance < best_distance)
                 {
-                    best_distance = this_distance;
+                    best_distance = distance;
                 }
             }
             else //Inserting in reverse is allowed. This means that we must try the reverse direction and also check which endpoint of the other waypoints we must latch onto.
             {
-                float this_distance = distance(waypoint->end_point,(*result.begin())->is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point); //From end of this element to 'start' of next element.
-                if(this_distance < best_distance)
+                int64_t distance = vSize(waypoint->end_point - ((*result.begin())->is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point)); //From end of this element to 'start' of next element.
+                if(distance < best_distance)
                 {
-                    best_distance = this_distance;
+                    best_distance = distance;
                     best_direction = false;
                 }
-                this_distance = distance(waypoint->start_point,(*result.begin())-> is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point); //From start of this element to 'start' of next element.
-                if(this_distance < best_distance)
+                distance = vSize(waypoint->start_point - ((*result.begin())->is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point)); //From start of this element to 'start' of next element.
+                if(distance < best_distance)
                 {
-                    best_distance = this_distance;
+                    best_distance = distance;
                     best_direction = true;
                 }
             }
@@ -300,27 +288,27 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             {
                 if(!allow_reverse)
                 {
-                    float this_distance = distance((*before_insert)->end_point,waypoint->start_point); //From end of previous element to start of this element.
-                    if(this_distance < best_distance)
+                    int64_t distance = vSize((*before_insert)->end_point - waypoint->start_point); //From end of previous element to start of this element.
+                    if(distance < best_distance)
                     {
-                        best_distance = this_distance;
+                        best_distance = distance;
                         best_insert = before_insert;
                     }
                 }
                 else //Inserting in reverse is allowed.
                 {
-                    float this_distance = distance((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point,waypoint->start_point); //From 'end' of previous element to start of this element.
-                    if(this_distance < best_distance)
+                    int64_t distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - waypoint->start_point); //From 'end' of previous element to start of this element.
+                    if(distance < best_distance)
                     {
-                        best_distance = this_distance;
+                        best_distance = distance;
                         best_direction = false;
                         best_insert = before_insert;
                     }
                     //Try reverse too.
-                    this_distance = distance((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point,waypoint->end_point); //From 'end' of previous element to end of this element.
-                    if(this_distance < best_distance)
+                    distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - waypoint->end_point); //From 'end' of previous element to end of this element.
+                    if(distance < best_distance)
                     {
-                        best_distance = this_distance;
+                        best_distance = distance;
                         best_direction = true;
                         best_insert = before_insert;
                     }
@@ -330,35 +318,35 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             {
                 if(!allow_reverse)
                 {
-                    float removed_distance = distance((*before_insert)->end_point,(*after_insert)->start_point); //Distance of the original move that we'll remove.
-                    float before_distance = distance((*before_insert)->end_point,waypoint->start_point); //From end of previous element to start of this element.
-                    float after_distance = distance(waypoint->end_point,(*after_insert)->start_point); //From end of this element to start of next element.
-                    float this_distance = before_distance + after_distance - removed_distance;
-                    if(this_distance < best_distance)
+                    int64_t removed_distance = vSize((*before_insert)->end_point - (*after_insert)->start_point); //Distance of the original move that we'll remove.
+                    int64_t before_distance = vSize((*before_insert)->end_point - waypoint->start_point); //From end of previous element to start of this element.
+                    int64_t after_distance = vSize(waypoint->end_point - (*after_insert)->start_point); //From end of this element to start of next element.
+                    int64_t distance = before_distance + after_distance - removed_distance;
+                    if(distance < best_distance)
                     {
-                        best_distance = this_distance;
+                        best_distance = distance;
                         best_insert = before_insert;
                     }
                 }
                 else
                 {
-                    float removed_distance = distance((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point,(*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point); //From 'end' of previous element to 'start' of next element.
-                    float before_distance = distance((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point,waypoint->start_point); //From 'end' of previous element to start of this element.
-                    float after_distance = distance(waypoint->end_point,(*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point); //From end of this element to 'start' of next element.
-                    float this_distance = before_distance + after_distance - removed_distance;
-                    if(this_distance < best_distance)
+                    int64_t removed_distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - ((*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point)); //From 'end' of previous element to 'start' of next element.
+                    int64_t before_distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - waypoint->start_point); //From 'end' of previous element to start of this element.
+                    int64_t after_distance = vSize(waypoint->end_point - ((*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point)); //From end of this element to 'start' of next element.
+                    int64_t distance = before_distance + after_distance - removed_distance;
+                    if(distance < best_distance)
                     {
-                        best_distance = this_distance;
+                        best_distance = distance;
                         best_direction = false;
                         best_insert = before_insert;
                     }
                     //Try reverse too.
-                    before_distance = distance((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point,waypoint->end_point); //From 'end' of previous element to end of this element.
-                    after_distance = distance(waypoint->start_point,(*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point); //From start of this element to 'start' of next element.
-                    this_distance = before_distance + after_distance - removed_distance;
-                    if(this_distance < best_distance)
+                    before_distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - waypoint->end_point); //From 'end' of previous element to end of this element.
+                    after_distance = vSize(waypoint->start_point - ((*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point)); //From start of this element to 'start' of next element.
+                    distance = before_distance + after_distance - removed_distance;
+                    if(distance < best_distance)
                     {
-                        best_distance = this_distance;
+                        best_distance = distance;
                         best_direction = true;
                         best_insert = before_insert;
                     }
@@ -399,13 +387,6 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
         delete waypoint; //Free the waypoint from memory. It is no longer needed from here on, since we copied the element in it to the output.
     }
     return result_vector;
-}
-
-template<class E> float TravellingSalesman<E>::distance(Point a,Point b)
-{
-    int dx = a.X - b.X;
-    int dy = a.Y - b.Y;
-    return std::sqrt(dx * dx + dy * dy);
 }
 
 template<class E> std::vector<Waypoint<E>*> TravellingSalesman<E>::fillWaypoints(std::vector<E> elements)
