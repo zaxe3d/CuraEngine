@@ -246,12 +246,13 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
     
     //Make a beginning of the path depending on whether or not we have a starting point.
     size_t next_to_insert = 0; //Due to the check at the start, we know that shuffled always contains at least 1 element.
+    Waypoint<E>* starting_waypoint = nullptr;
     if(starting_point) //If we have a fixed starting point, insert it first.
     {
-        Waypoint<E>* path_start = new Waypoint<E>;
+        starting_waypoint = new Waypoint<E>;
         //Note: The start point of this waypoint is never set, since it should not be used. There should never be anything before the startpoint.
-        path_start->end_point = *starting_point;
-        result.push_back(path_start);
+        starting_waypoint->end_point = *starting_point;
+        result.push_back(starting_waypoint);
     }
     else //We don't have a fixed starting point, so take the first element to begin with. In the loop later we will then also allow inserting before this point.
     {
@@ -386,12 +387,16 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
     }
     for(Waypoint<E>* waypoint : result)
     {
+        if(waypoint == starting_waypoint) //Don't include the waypoint of the starting point, if any.
+        {
+            continue;
+        }
         result_vector.push_back(waypoint->element);
         if(allow_reverse)
         {
             reversed_elements->push_back(waypoint->is_reversed);
         }
-        delete waypoint;
+        delete waypoint; //Free the waypoint from memory. It is no longer needed from here on, since we copied the element in it to the output.
     }
     return result_vector;
 }
