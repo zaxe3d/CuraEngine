@@ -343,7 +343,8 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
         grid.insert(polygons[polygon_index][polygons[polygon_index].size() - 1],polygon_index);
     }
     std::vector<std::vector<size_t>> clusters;
-    bool picked[polygons.size()] = {false}; //For each polygon, whether it is already picked.
+    bool picked[polygons.size()]; //For each polygon, whether it is already picked.
+    memset(picked,0,polygons.size()); //Initialise to false.
     for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //Then greedily find all clusters.
     {
         if(picked[polygon_index]) //Already in a cluster.
