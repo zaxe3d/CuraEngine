@@ -166,6 +166,10 @@ void LineOrderOptimizer::optimize()
         {
             return a.first < b.first;
         }); //Actually sort the lines by y-intersect.
+        for(size_t line_index = 0;line_index < intercepts.size();line_index++)
+        {
+            line_cluster[line_index] = intercepts[line_index].second;
+        }
     }
     
     TravellingSalesman<size_t> tspsolver([&](size_t cluster_index) -> Point
