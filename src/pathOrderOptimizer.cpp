@@ -158,6 +158,10 @@ void LineOrderOptimizer::optimize()
             return polygons[polygon_index][polygons[polygon_index].size() - 1];
         }
     );
+    
+    std::vector<std::vector<size_t>> line_clusters = cluster();
+    
+    
     std::vector<bool> reverse_polygons;
     std::vector<size_t> unoptimised;
     unoptimised.reserve(polygons.size()); //We have to convert the polygons to their indices before shuffling in order to be able to output indices.
@@ -310,6 +314,49 @@ inline void LineOrderOptimizer::checkIfLineIsBest(unsigned int i_line_polygon, i
             polyStart[i_line_polygon] = 1;
         }
     }
+}
+
+std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
+{
+    BucketGrid2D<size_t> grid(5000);
+    for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //First put every endpoint of all lines in the grid.
+    {
+        grid.insert(polygons[polygon_index][0],polygon_index);
+        grid.insert(polygons[polygon_index][polygons[polygon_index].size() - 1],polygon_index);
+    }
+    std::vector<std::vector<size_t>> clusters;
+    bool picked[polygons.size()]; //For each polygon, whether it is already picked.
+    for(size_t i = 0;i < polygons.size();i++)
+    {
+        picked[i] = false;
+    }
+    for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //Then greedily find all clusters.
+    {
+        if(picked[polygon_index]) //Already in a cluster.
+        {
+            continue;
+        }
+        clusters.push_back(std::vector<size_t>()); //Make a new cluster for anything close to this polygon.
+        clusters.back().push_back(polygon_index);
+        picked[polygon_index] = true;
+        for(size_t other_index : grid.findNearbyObjects(polygons[polygon_index][0])) //Put all polygons in a cluster with both endpoints near.
+        {
+            if(picked[other_index]) //Already clustered. Skip this one.
+            {
+                continue;
+            }
+            for(size_t near_other_index : grid.findNearbyObjects(polygons[polygon_index][polygons[polygon_index].size() - 1]))
+            {
+                if(near_other_index == other_index) //This polygon is also near to the other endpoint.
+                {
+                    clusters.back().push_back(other_index); //Put it in the same cluster.
+                    picked[other_index] = true;
+                    break;
+                }
+            }
+        }
+    }
+    return clusters;
 }
 
 }//namespace cura

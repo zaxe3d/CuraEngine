@@ -205,11 +205,6 @@ public:
 //         if (! emplaced.second)
 //             logError("Error! BucketGrid2D couldn't insert object!");
     };
-
-
-
-
-
 };
 
 }//namespace cura

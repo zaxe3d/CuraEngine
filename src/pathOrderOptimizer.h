@@ -82,6 +82,15 @@ public:
 
 private:
     void checkIfLineIsBest(unsigned int i_line_polygon, int& best, float& bestDist, Point& prev_point, Point& incommingPerpundicularNormal);
+    
+    /*!
+     * \brief Clusters the polygons in groups such that the start and end of the
+     * polygons in each group are close together.
+     * 
+     * \return Indices of polygons, separated in a separate vector for each
+     * group.
+     */
+    std::vector<std::vector<size_t>> cluster();
 
 };
 
