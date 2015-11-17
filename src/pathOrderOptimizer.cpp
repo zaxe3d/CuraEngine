@@ -164,7 +164,7 @@ void LineOrderOptimizer::optimize()
         }
         std::sort(intercepts.begin(),intercepts.end(),[](std::pair<long long,size_t> a,std::pair<long long,size_t> b)
         {
-            return a.first < b.first;
+            return a.first > b.first;
         }); //Actually sort the lines by y-intersect.
         for(size_t line_index = 0;line_index < intercepts.size();line_index++)
         {
