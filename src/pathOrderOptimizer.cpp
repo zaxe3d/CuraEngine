@@ -202,14 +202,13 @@ void LineOrderOptimizer::optimize()
         }
         else //Insert the lines in backward direction.
         {
-            for(size_t polygon_index = 0;polygon_index < cluster.size();polygon_index++)
+            for(size_t polygon_index = 1;polygon_index < cluster.size();polygon_index++)
             {
                 polyOrder.push_back(static_cast<int>(cluster[cluster.size() - polygon_index]));
-                polyStart.push_back((polygon_index + 1) % 2);
+                polyStart.push_back(polygon_index % 2);
             }
         }
     }
-    std::cout << std::endl;
     
     /*int gridSize = 5000; // the size of the cells in the hash grid.
     BucketGrid2D<unsigned int> line_bucket_grid(gridSize);
