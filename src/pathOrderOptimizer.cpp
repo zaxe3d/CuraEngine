@@ -148,42 +148,60 @@ int PathOrderOptimizer::getFarthestPointInPolygon(int poly_idx)
 */
 void LineOrderOptimizer::optimize()
 {
-    //Create the TSP solver that will solve all our problems.
-    TravellingSalesman<size_t> tspsolver([&](size_t polygon_index) -> Point
-        {
-            return polygons[polygon_index][0];
-        }
-        ,[&](int polygon_index) -> Point
-        {
-            return polygons[polygon_index][polygons[polygon_index].size() - 1];
-        }
-    );
-    
     std::vector<std::vector<size_t>> line_clusters = cluster();
-    
-    
-    std::vector<bool> reverse_polygons;
-    std::vector<size_t> unoptimised;
-    unoptimised.reserve(polygons.size()); //We have to convert the polygons to their indices before shuffling in order to be able to output indices.
-    for(size_t index = 0;index < polygons.size();index++)
+    //Since we know that the lines are created diagonally, we can order lines within a cluster by the y-coordinate of intersecting x=0.
+    for(std::vector<size_t> line_cluster : line_clusters)
     {
-        unoptimised.push_back(index);
+        std::vector<std::pair<long long,size_t>> intercepts; //Rather than comparing y-intersect on the go, pre-compute all y-intersects and sort pairs of lines with their y-intersects.
+        intercepts.reserve(line_cluster.size());
+        for(size_t line : line_cluster)
+        {
+            assert(polygons[line][0].X != polygons[line][1].X); //Lines should be diagonal. If they are exactly vertical, the following code will give division by zero.
+            //The standard formula for converting two-point line representation of the line through (a,b) and (c,d) to y-intercept form is: y = (x(b - d)) / (a - c) + (ad - bc) / (a - c).
+            //However, to compute only the y-intercept itself, we make x=0, resulting in y = (ad - bc) / (a - c).
+            long long y_intercept = (polygons[line][0].X * polygons[line][1].Y - polygons[line][0].Y * polygons[line][1].X) / (polygons[line][0].X - polygons[line][1].X);
+            intercepts.push_back(std::make_pair(y_intercept,line));
+        }
+        std::sort(intercepts.begin(),intercepts.end(),[](std::pair<long long,size_t> a,std::pair<long long,size_t> b)
+        {
+            return a.first < b.first;
+        }); //Actually sort the lines by y-intersect.
     }
-    std::vector<size_t> optimised = tspsolver.findPath(unoptimised,reverse_polygons,&startPoint); //Approximate the solution with the TSP solver.
+    
+    TravellingSalesman<size_t> tspsolver([&](size_t cluster_index) -> Point
+        {
+            return polygons[line_clusters[cluster_index][0]][0];
+        }
+        ,[&](size_t cluster_index) -> Point
+        {
+            return polygons[line_clusters[cluster_index].back()].back();
+        }
+    ); //Solves the macro TSP problem of ordering the clusters.
+    std::vector<bool> reverse_clusters;
+    std::vector<size_t> unoptimised(line_clusters.size());
+    std::iota(unoptimised.begin(),unoptimised.end(),0);
+    std::vector<size_t> optimised = tspsolver.findPath(unoptimised,reverse_clusters,&startPoint); //Approximate the shortest path with the TSP solver.
     
     //Actually put the paths in their correct order for the output.
-    polyOrder.reserve(optimised.size());
-    polyStart.reserve(optimised.size());
-    for(size_t polygon = 0;polygon < optimised.size();polygon++)
+    polyOrder.reserve(polygons.size());
+    polyStart.reserve(polygons.size());
+    for(size_t cluster_index = 0;cluster_index < optimised.size();cluster_index++)
     {
-        polyOrder.push_back(static_cast<int>(optimised[polygon]));
-        if(reverse_polygons[polygon])
+        if(!reverse_clusters[cluster_index]) //Insert the lines in forward direction.
         {
-            polyStart.push_back(polygons[optimised[polygon]].size() - 1); //If we're traversing in reverse, start at the end of this polygon.
+            for(size_t polygon_index = 0;polygon_index < line_clusters[optimised[cluster_index]].size();polygon_index++)
+            {
+                polyOrder.push_back(static_cast<int>(line_clusters[optimised[cluster_index]][polygon_index]));
+                polyStart.push_back(polygon_index % 2);
+            }
         }
-        else
+        else //Insert the lines in backward direction.
         {
-            polyStart.push_back(0);
+            for(size_t polygon_index = 0;polygon_index < line_clusters[optimised[cluster_index]].size();polygon_index++)
+            {
+                polyOrder.push_back(static_cast<int>(line_clusters[optimised[cluster_index]][line_clusters[optimised[cluster_index]].size() - polygon_index]));
+                polyStart.push_back((polygon_index + 1) % 2);
+            }
         }
     }
     
