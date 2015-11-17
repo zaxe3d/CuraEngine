@@ -204,8 +204,8 @@ void LineOrderOptimizer::optimize()
         {
             for(size_t polygon_index = 1;polygon_index < cluster.size();polygon_index++)
             {
-                polyOrder.push_back(static_cast<int>(cluster[cluster.size() - polygon_index]));
-                polyStart.push_back(polygon_index % 2);
+                polyOrder.push_back(static_cast<int>(cluster[cluster.size() - polygon_index - 1]));
+                polyStart.push_back((polygon_index + 1) % 2);
             }
         }
     }
