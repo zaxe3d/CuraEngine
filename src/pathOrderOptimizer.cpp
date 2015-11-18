@@ -162,10 +162,7 @@ void LineOrderOptimizer::optimize()
             long long y_intercept = (polygons[line][0].X * polygons[line][1].Y - polygons[line][0].Y * polygons[line][1].X) / (polygons[line][0].X - polygons[line][1].X);
             intercepts.push_back(std::make_pair(y_intercept,line));
         }
-        std::sort(intercepts.begin(),intercepts.end(),[](std::pair<long long,size_t> a,std::pair<long long,size_t> b)
-        {
-            return a.first > b.first;
-        }); //Actually sort the lines by y-intersect.
+        std::sort(intercepts.begin(),intercepts.end()); //Actually sort the lines by y-intersect.
         for(size_t line_index = 0;line_index < intercepts.size();line_index++)
         {
             line_cluster[line_index] = intercepts[line_index].second;
