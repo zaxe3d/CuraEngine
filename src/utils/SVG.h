@@ -140,6 +140,27 @@ public:
         }
     }
     
+    /*!
+     * \brief Draws the specified polygon on the canvas.
+     * 
+     * The polygon is always closed and has an outline and fill colour that you
+     * can specify.
+     * 
+     * \param polygon The polygon to draw on the canvas.
+     * \param colour The colour of the polygon.
+     * \param outline_colour The colour of the outline of the polygon.
+     */
+    void writeAreas(PolygonRef polygon, Color colour = Color::GRAY, Color outline_colour = Color::BLACK)
+    {
+        fprintf(out, "<polygon points=\"");
+        for(Point point : polygon)
+        {
+            Point transformed = transform(point);
+            fprintf(out, "%lli,%lli ", transformed.X, transformed.Y);
+        }
+        fprintf(out, "\" fill=\"%s\" stroke=\"%s\" />\n", toString(colour).c_str(),toString(outline_colour).c_str());
+    }
+    
     void writeAreas(std::vector<Point> polygon,Color color = Color::GRAY,Color outline_color = Color::BLACK)
     {
         fprintf(out,"<polygon fill=\"%s\" stroke=\"%s\" stroke-width=\"1\" points=\"",toString(color).c_str(),toString(outline_color).c_str()); //The beginning of the polygon tag.
