@@ -30,6 +30,43 @@ public:
     {
         calculate(polys);
     }
+    
+    /*!
+     * \brief Creates an axis aligned bounding box around the specified polygon.
+     * 
+     * The bounding box will fit snugly around the polygon.
+     * 
+     * \param polygon The polygon to create a bounding box for.
+     */
+    AABB(PolygonRef& polygon)
+    : min(POINT_MAX, POINT_MAX), max(POINT_MIN, POINT_MIN)
+    {
+        for(Point point : polygon)
+        {
+            include(point);
+        }
+    }
+    
+    /*!
+     * \brief Creates an axis aligned bounding box around the specified set of
+     * polygons.
+     * 
+     * The bounding box will fit around all polygons.
+     * 
+     * \param polygons A vector of polygons that should be included in the
+     * bounding box.
+     */
+    AABB(std::vector<PolygonRef>& polygons)
+    : min(POINT_MAX, POINT_MAX), max(POINT_MIN, POINT_MIN)
+    {
+        for(PolygonRef polygon : polygons)
+        {
+            for(Point point : polygon)
+            {
+                include(point);
+            }
+        }
+    }
 
     void calculate(Polygons& polys)
     {
