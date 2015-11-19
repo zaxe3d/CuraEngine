@@ -189,7 +189,6 @@ void LineOrderOptimizer::optimize()
     
     //Actually put the paths in their correct order for the output.
     polyOrder.reserve(polygons.size());
-    polyStart.resize(polygons.size()); //Polystart should always contain an entry for all polygons.
     for(size_t cluster_index = 0;cluster_index < optimised.size();cluster_index++)
     {
         std::vector<size_t> cluster = line_clusters[optimised[cluster_index]];
@@ -198,7 +197,6 @@ void LineOrderOptimizer::optimize()
             for(size_t polygon_index = 0;polygon_index < cluster.size();polygon_index++)
             {
                 polyOrder.push_back(static_cast<int>(cluster[polygon_index]));
-                polyStart[cluster[polygon_index]] = polygon_index % 2;
             }
         }
         else //Insert the lines in backward direction.
@@ -206,7 +204,6 @@ void LineOrderOptimizer::optimize()
             for(size_t polygon_index = 1;polygon_index < cluster.size();polygon_index++)
             {
                 polyOrder.push_back(static_cast<int>(cluster[cluster.size() - polygon_index - 1]));
-                polyStart[cluster[polygon_index]] = (polygon_index + 1) % 2;
             }
         }
     }
@@ -238,6 +235,7 @@ inline void LineOrderOptimizer::checkIfLineIsBest(unsigned int i_line_polygon, i
 
 std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
 {
+    polyStart.resize(polygons.size()); //Polystart should always contain an entry for all polygons.
     long long grid_size = 5000; //Maximum distance of lines that get clustered.
     BucketGrid2D<size_t> grid(grid_size);
     for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //First put every endpoint of all lines in the grid.
@@ -262,31 +260,37 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
         size_t best_polygon = current_polygon;
         while(best_polygon != static_cast<size_t>(-1)) //Keep going until there is no valid neighbour.
         {
+            Point current_start = polygons[current_polygon][polyStart[current_polygon]]; //Start and end point of the current polygon. These are used to find the distance to the next polygon.
+            Point current_end = polygons[current_polygon][(polyStart[current_polygon] - 1) % polygons[current_polygon].size()];
             best_polygon = static_cast<size_t>(-1);
             long long best_distance = grid_size * grid_size << 1; //grid_size squared since vSize2 gives squared distance, and *2 since both endpoints are considered.
+            size_t best_start;
             for(size_t neighbour : grid.findNearbyObjects(polygons[current_polygon][0]))
             {
                 if(picked[neighbour]) //Don't use neighbours that are already in another cluster.
                 {
                     continue;
                 }
-                long long distance = vSize2(polygons[current_polygon][0] - polygons[neighbour][0]) + vSize2(polygons[current_polygon].back() - polygons[neighbour].back());
+                long long distance = vSize2(current_start - polygons[neighbour][0]) + vSize2(current_end - polygons[neighbour].back());
                 if(distance < best_distance)
                 {
                     best_polygon = neighbour;
                     best_distance = distance;
+                    best_start = polygons[neighbour].size() - 1; //Start the neighbour where the current line ends.
                 }
-                distance = vSize2(polygons[current_polygon].back() - polygons[neighbour][0]) + vSize2(polygons[current_polygon][0] - polygons[neighbour].back()); //Also try reversing the direction of the line.
+                distance = vSize2(current_end - polygons[neighbour][0]) + vSize2(current_start - polygons[neighbour].back()); //Also try reversing the direction of the line.
                 if(distance < best_distance)
                 {
                     best_polygon = neighbour;
                     best_distance = distance;
+                    best_start = 0; //Start the neighbour where the current line ends.
                 }
             }
             if(best_polygon != static_cast<size_t>(-1)) //We found one.
             {
                 current_polygon = best_polygon;
                 clusters.back().push_back(best_polygon);
+                polyStart[best_polygon] = best_start;
                 picked[best_polygon] = true;
             }
         }
