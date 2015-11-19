@@ -153,25 +153,6 @@ void LineOrderOptimizer::optimize()
         return;
     }
     std::vector<std::vector<size_t>> line_clusters = cluster();
-    //Since we know that the lines are created diagonally, we can order lines within a cluster by the y-coordinate of intersecting x=0.
-    for(std::vector<size_t> line_cluster : line_clusters)
-    {
-        std::vector<std::pair<long long,size_t>> intercepts; //Rather than comparing y-intersect on the go, pre-compute all y-intersects and sort pairs of lines with their y-intersects.
-        intercepts.reserve(line_cluster.size());
-        for(size_t line : line_cluster)
-        {
-            assert(polygons[line][0].X != polygons[line][1].X); //Lines should be diagonal. If they are exactly vertical, the following code will give division by zero.
-            //The standard formula for converting two-point line representation of the line through (a,b) and (c,d) to y-intercept form is: y = (x(b - d)) / (a - c) + (ad - bc) / (a - c).
-            //However, to compute only the y-intercept itself, we make x=0, resulting in y = (ad - bc) / (a - c).
-            long long y_intercept = (polygons[line][0].X * polygons[line][1].Y - polygons[line][0].Y * polygons[line][1].X) / (polygons[line][0].X - polygons[line][1].X);
-            intercepts.push_back(std::make_pair(y_intercept,line));
-        }
-        std::sort(intercepts.begin(),intercepts.end()); //Actually sort the lines by y-intersect.
-        for(size_t line_index = 0;line_index < intercepts.size();line_index++)
-        {
-            line_cluster[line_index] = intercepts[line_index].second;
-        }
-    }
     
     TravellingSalesman<size_t> tspsolver([&](size_t cluster_index) -> Point
         {
