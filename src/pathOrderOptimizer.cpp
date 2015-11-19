@@ -341,38 +341,56 @@ inline void LineOrderOptimizer::checkIfLineIsBest(unsigned int i_line_polygon, i
 
 std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
 {
-    BucketGrid2D<size_t> grid(5000);
+    long long grid_size = 5000; //Maximum distance of lines that get clustered.
+    BucketGrid2D<size_t> grid(grid_size);
     for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //First put every endpoint of all lines in the grid.
     {
         grid.insert(polygons[polygon_index][0],polygon_index);
-        grid.insert(polygons[polygon_index][polygons[polygon_index].size() - 1],polygon_index);
+        grid.insert(polygons[polygon_index].back(),polygon_index);
     }
+    
     std::vector<std::vector<size_t>> clusters;
-    bool picked[polygons.size()]; //For each polygon, whether it is already picked.
+    bool picked[polygons.size()]; //For each polygon, whether it is already in a cluster.
     memset(picked,0,polygons.size()); //Initialise to false.
-    for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //Then greedily find all clusters.
+    for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //Find clusters with nearest neighbour-ish search.
     {
         if(picked[polygon_index]) //Already in a cluster.
         {
             continue;
         }
-        clusters.push_back(std::vector<size_t>()); //Make a new cluster for anything close to this polygon.
+        clusters.push_back(std::vector<size_t>()); //Make a new cluster for this line.
         clusters.back().push_back(polygon_index);
         picked[polygon_index] = true;
-        for(size_t other_index : grid.findNearbyObjects(polygons[polygon_index][0])) //Put all polygons in a cluster with both endpoints near.
+        size_t current_polygon = polygon_index; //We'll do a walk to the nearest valid neighbour. A neighbour is valid if it is not picked yet and if both its endpoints are near.
+        size_t best_polygon = current_polygon;
+        while(best_polygon != static_cast<size_t>(-1)) //Keep going until there is no valid neighbour.
         {
-            if(picked[other_index]) //Already clustered. Skip this one.
+            best_polygon = static_cast<size_t>(-1);
+            long long best_distance = grid_size * grid_size << 1; //grid_size squared since vSize2 gives squared distance, and *2 since both endpoints are considered.
+            for(size_t neighbour : grid.findNearbyObjects(polygons[current_polygon][0]))
             {
-                continue;
-            }
-            for(size_t near_other_index : grid.findNearbyObjects(polygons[polygon_index][polygons[polygon_index].size() - 1]))
-            {
-                if(near_other_index == other_index) //This polygon is also near to the other endpoint.
+                if(picked[neighbour]) //Don't use neighbours that are already in another cluster.
                 {
-                    clusters.back().push_back(other_index); //Put it in the same cluster.
-                    picked[other_index] = true;
-                    break;
+                    continue;
                 }
+                long long distance = vSize2(polygons[current_polygon][0] - polygons[neighbour][0]) + vSize2(polygons[current_polygon].back() - polygons[neighbour].back());
+                if(distance < best_distance)
+                {
+                    best_polygon = neighbour;
+                    best_distance = distance;
+                }
+                distance = vSize2(polygons[current_polygon].back() - polygons[neighbour][0]) + vSize2(polygons[current_polygon][0] - polygons[neighbour].back()); //Also try reversing the direction of the line.
+                if(distance < best_distance)
+                {
+                    best_polygon = neighbour;
+                    best_distance = distance;
+                }
+            }
+            if(best_polygon != static_cast<size_t>(-1)) //We found one.
+            {
+                current_polygon = best_polygon;
+                clusters.back().push_back(best_polygon);
+                picked[best_polygon] = true;
             }
         }
     }
