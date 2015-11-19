@@ -148,6 +148,10 @@ int PathOrderOptimizer::getFarthestPointInPolygon(int poly_idx)
 */
 void LineOrderOptimizer::optimize()
 {
+    if(polygons.empty()) //Nothing to do. Terminate early.
+    {
+        return;
+    }
     std::vector<std::vector<size_t>> line_clusters = cluster();
     //Since we know that the lines are created diagonally, we can order lines within a cluster by the y-coordinate of intersecting x=0.
     for(std::vector<size_t> line_cluster : line_clusters)
