@@ -22,14 +22,30 @@ namespace cura
 template<class E> struct Waypoint
 {
     /*!
-     * \brief Constructs a new waypoint.
+     * \brief Constructs a new waypoint with the specified start and end point
+     * and the specified element.
      * 
-     * The fields of the waypoint are not yet set. You must initialise them
-     * afterwards.
+     * \param start_point The start point of the waypoint.
+     * \param end_point The end point of the waypoint.
+     * \param element The element that's to be bound to this waypoint.
      */
-    Waypoint()
+    Waypoint(Point start_point,Point end_point,E element) : start_point(start_point),end_point(end_point),element(element)
     {
-        //Do nothing. Set the fields yourself.
+        average_point = start_point + end_point / 2; //Compute the average point from the start and end points.
+    }
+    
+    /*!
+     * \brief Constructs a new waypoint with the specified start and end point.
+     * 
+     * The waypoint will contain no element. Please keep track of this, as
+     * trying to access the element will access uninitialised memory.
+     * 
+     * \param start_point The start point of the waypoint.
+     * \param end_point The end point of the waypoint.
+     */
+    Waypoint(Point start_point,Point end_point) : start_point(start_point),end_point(end_point)
+    {
+        average_point = start_point + end_point / 2; //Compute the average point from the start and end points.
     }
     
     /*!
@@ -47,6 +63,11 @@ template<class E> struct Waypoint
      * different from the starting point.
      */
     Point end_point;
+    
+    /*!
+     * \brief The average between <em>start_point</em> and <em>end_point</em>.
+     */
+    Point average_point;
     
     /*!
      * \brief The actual element this waypoint holds.
@@ -231,47 +252,20 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
     std::shuffle(shuffle.begin(),shuffle.end(),rng); //"Randomly" shuffles the waypoints.
     
     std::list<Waypoint<E>*> result;
+    result.push_back(shuffle[0]); //Due to the check at the start, we know that shuffled always contains at least 1 element.
     
-    //Make a beginning of the path depending on whether or not we have a starting point.
-    size_t next_to_insert = 0; //Due to the check at the start, we know that shuffled always contains at least 1 element.
-    Waypoint<E>* starting_waypoint = nullptr;
-    if(starting_point) //If we have a fixed starting point, insert it first.
-    {
-        starting_waypoint = new Waypoint<E>;
-        //Note: The start point of this waypoint is never set, since it should not be used. There should never be anything before the startpoint.
-        starting_waypoint->end_point = *starting_point;
-        result.push_back(starting_waypoint);
-    }
-    else //We don't have a fixed starting point, so take the first element to begin with. In the loop later we will then also allow inserting before this point.
-    {
-        result.push_back(shuffle[next_to_insert++]);
-    }
-    
-    for(;next_to_insert < shuffle.size();next_to_insert++) //Now randomly insert the rest of the points.
+    for(size_t next_to_insert = 1;next_to_insert < shuffle.size();next_to_insert++) //Now randomly insert the rest of the points.
     {
         Waypoint<E>* waypoint = shuffle[next_to_insert];
         int64_t best_distance = std::numeric_limits<int64_t>::max(); //Minimise this distance.
-        bool best_direction = false; //Direction of how to insert the element. False is normal. True is reverse.
         ListElement best_insert; //Where to insert the element. It will be inserted after this element. If it's nullptr, insert at the very front.
-        if(!starting_point) //We have no starting point, so inserting before the first point is also allowed.
+        
+        //First try inserting before the first element.
+        int64_t distance = vSize(waypoint->average_point - (*result.begin())->average_point); //From this element to the first element.
+        if(distance < best_distance)
         {
-            int64_t distance = vSize(waypoint->end_point - (*result.begin())->start_point); //From end of this element to start of next element.
-            if(distance < best_distance)
-            {
-                best_distance = distance;
-                best_direction = false;
-                best_insert = result.begin();
-            }
-            if(allow_reverse) //Inserting in reverse is allowed. This means that we must try the reverse direction.
-            {
-                distance = vSize(waypoint->start_point - (*result.begin())->start_point); //From start of this element to 'start' of next element.
-                if(distance < best_distance)
-                {
-                    best_distance = distance;
-                    best_direction = true;
-                    best_insert = result.begin();
-                }
-            }
+            best_distance = distance;
+            best_insert = result.begin();
         }
         for(ListElement before_insert = result.begin();before_insert != result.end();before_insert++)
         {
@@ -279,58 +273,27 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             after_insert++; //Get the element after the current element.
             if(after_insert == result.end()) //There is no next element. We're inserting at the end of the path.
             {
-                int64_t distance = vSize((*before_insert)->end_point - waypoint->start_point); //From end of previous element to start of this element.
+                int64_t distance = vSize((*before_insert)->average_point - waypoint->average_point); //From the last element to this element.
                 if(distance < best_distance)
                 {
                     best_distance = distance;
-                    best_direction = false;
                     best_insert = after_insert;
-                }
-                if(allow_reverse) //Inserting in reverse is allowed.
-                {
-                    distance = vSize((*before_insert)->end_point - waypoint->end_point); //From 'end' of previous element to end of this element.
-                    if(distance < best_distance)
-                    {
-                        best_distance = distance;
-                        best_direction = true;
-                        best_insert = after_insert;
-                    }
                 }
             }
             else //There is a next element. We're inserting somewhere in the middle.
             {
-                int64_t removed_distance = vSize((*before_insert)->end_point - (*after_insert)->start_point); //Distance of the original move that we'll remove.
-                int64_t before_distance = vSize((*before_insert)->end_point - waypoint->start_point); //From end of previous element to start of this element.
-                int64_t after_distance = vSize(waypoint->end_point - (*after_insert)->start_point); //From end of this element to start of next element.
+                int64_t removed_distance = vSize((*before_insert)->average_point - (*after_insert)->average_point); //Distance of the original move that we'll remove.
+                int64_t before_distance = vSize((*before_insert)->average_point - waypoint->average_point); //From end of previous element to start of this element.
+                int64_t after_distance = vSize(waypoint->average_point - (*after_insert)->average_point); //From end of this element to start of next element.
                 int64_t distance = before_distance + after_distance - removed_distance;
                 if(distance < best_distance)
                 {
                     best_distance = distance;
-                    best_direction = false;
                     best_insert = after_insert;
-                }
-                if(allow_reverse) //Try reverse too.
-                {
-                    before_distance = vSize((*before_insert)->end_point - waypoint->end_point); //From 'end' of previous element to end of this element.
-                    after_distance = vSize(waypoint->start_point - (*after_insert)->start_point); //From start of this element to 'start' of next element.
-                    distance = before_distance + after_distance - removed_distance;
-                    if(distance < best_distance)
-                    {
-                        best_distance = distance;
-                        best_direction = true;
-                        best_insert = after_insert;
-                    }
                 }
             }
         }
         //Actually insert the waypoint at the best position we found.
-        waypoint->is_reversed = best_direction; //Will remain false if allow_reverse is false.
-        if(best_direction) //We also need to swap the start and end points in this waypoint.
-        {
-            Point temp = waypoint->start_point;
-            waypoint->start_point = waypoint->end_point;
-            waypoint->end_point = temp;
-        }
         if(best_insert == result.end()) //We must insert at the very start.
         {
             result.push_back(waypoint);
@@ -338,6 +301,87 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
         else //We must insert after best_insert.
         {
             result.insert(best_insert,waypoint);
+        }
+    }
+    
+    //Now determine for each element in which direction it should be placed.
+    ListElement element = result.begin();
+    (*element)->is_reversed = false; //For the first element, the direction doesn't matter, but choosing this determines the direction of the complete path (unless a starting point constrains that later).
+    ListElement previous_element = element;
+    element++;
+    for(;element != result.end();previous_element = element,element++) //For loop continually increments the 2 elements.
+    {
+        int64_t forward_distance,backward_distance;
+        if(!(*previous_element)->is_reversed)
+        {
+            forward_distance = vSize2((*previous_element)->end_point - (*element)->start_point); //From the end of the previous element to the start of this element.
+            backward_distance = vSize2((*previous_element)->end_point - (*element)->end_point); //From the end of the previous element to the end of this element.
+        }
+        else
+        {
+            forward_distance = vSize2((*previous_element)->start_point - (*element)->start_point); //From the "end" of the previous element to the start of this element.
+            backward_distance = vSize2((*previous_element)->start_point - (*element)->end_point); //From the "end" of the previous element to the start of this element.
+        }
+        (*element)->is_reversed = backward_distance < forward_distance;
+    }
+    
+    if(starting_point) //If there is a starting point, add it at the best position.
+    {
+        Waypoint<E>* starting_waypoint = new Waypoint<E>(*starting_point,*starting_point);
+        int64_t best_distance = std::numeric_limits<int64_t>::max(); //Minimise this distance.
+        ListElement best_insert; //Where to insert the element. It will be inserted after this element. If it's nullptr, insert at the very front.
+        
+        int64_t distance = vSize(starting_waypoint->average_point - (*result.begin())->average_point); //From the starting point to the first element.
+        if(distance < best_distance)
+        {
+            best_distance = distance;
+            best_insert = result.begin();
+        }
+        for(ListElement before_insert = result.begin();before_insert != result.end();before_insert++)
+        {
+            ListElement after_insert = before_insert;
+            after_insert++; //Get the element after the current element.
+            if(after_insert == result.end()) //There is no next element. We're inserting at the end of the path.
+            {
+                int64_t distance = vSize((*before_insert)->average_point - starting_waypoint->average_point); //From the last element to this element.
+                if(distance < best_distance)
+                {
+                    best_distance = distance;
+                    best_insert = after_insert;
+                }
+            }
+            else //There is a next element. We're inserting somewhere in the middle.
+            {
+                int64_t removed_distance = vSize((*before_insert)->average_point - (*after_insert)->average_point); //Distance of the original move that we'll remove.
+                int64_t after_distance = vSize(starting_waypoint->average_point - (*after_insert)->average_point); //From the starting point to the new start of the path.
+                int64_t path_closing_distance = vSize((*result.begin())->average_point - (*result.end())->average_point); //We'd cycle the start of the path, which means that the original start and end of the path will be connected.
+                int64_t distance = after_distance + path_closing_distance - removed_distance;
+                if(distance < best_distance)
+                {
+                    best_distance = distance;
+                    best_insert = after_insert;
+                }
+            }
+        }
+        if(best_insert == result.end()) //Starting point should be inserted at the beginning.
+        {
+            //Then the path is already correct.
+        }
+        else if(best_insert == --result.end()) //Starting point should be inserted at the end. This means that the path must be reversed.
+        {
+            for(Waypoint<E>* waypoint : result)
+            {
+                waypoint->is_reversed = !waypoint->is_reversed; //Reverse all waypoints.
+            }
+        }
+        else //Starting point should be somewhere in the middle! Uh-oh!
+        {
+            while(result.begin() != best_insert) //Move elements from the beginning to the end of the list until the required insertion point is at the start.
+            {
+                Waypoint<E>* waypoint = *(result.begin());
+                result.pop_front();
+                result.push_back(waypoint);
+            }
         }
     }
     
@@ -351,10 +395,6 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
     }
     for(Waypoint<E>* waypoint : result)
     {
-        if(waypoint == starting_waypoint) //Don't include the waypoint of the starting point, if any.
-        {
-            continue;
-        }
         result_vector.push_back(waypoint->element);
         if(allow_reverse)
         {
@@ -372,10 +412,7 @@ template<class E> std::vector<Waypoint<E>*> TravellingSalesman<E>::fillWaypoints
     
     for(E element : elements) //Put every element in a waypoint.
     {
-        Waypoint<E>* waypoint = new Waypoint<E>(); //Yes, this must be deleted when the algorithm is done!
-        waypoint->element = element;
-        waypoint->start_point = get_start(element);
-        waypoint->end_point = get_end(element);
+        Waypoint<E>* waypoint = new Waypoint<E>(get_start(element),get_end(element),element); //Yes, this must be deleted when the algorithm is done!
         result.push_back(waypoint);
     }
     return result;
