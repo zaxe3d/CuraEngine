@@ -305,24 +305,27 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
     }
     
     //Now determine for each element in which direction it should be placed.
-    ListElement element = result.begin();
-    (*element)->is_reversed = false; //For the first element, the direction doesn't matter, but choosing this determines the direction of the complete path (unless a starting point constrains that later).
-    ListElement previous_element = element;
-    element++;
-    for(;element != result.end();previous_element = element,element++) //For loop continually increments the 2 elements.
+    if(allow_reverse)
     {
-        int64_t forward_distance,backward_distance;
-        if(!(*previous_element)->is_reversed)
+        ListElement element = result.begin();
+        (*element)->is_reversed = false; //For the first element, the direction doesn't matter, but choosing this determines the direction of the complete path (unless a starting point constrains that later).
+        ListElement previous_element = element;
+        element++;
+        for(;element != result.end();previous_element = element,element++) //For loop continually increments the 2 elements.
         {
-            forward_distance = vSize2((*previous_element)->end_point - (*element)->start_point); //From the end of the previous element to the start of this element.
-            backward_distance = vSize2((*previous_element)->end_point - (*element)->end_point); //From the end of the previous element to the end of this element.
+            int64_t forward_distance,backward_distance;
+            if(!(*previous_element)->is_reversed)
+            {
+                forward_distance = vSize2((*previous_element)->end_point - (*element)->start_point); //From the end of the previous element to the start of this element.
+                backward_distance = vSize2((*previous_element)->end_point - (*element)->end_point); //From the end of the previous element to the end of this element.
+            }
+            else
+            {
+                forward_distance = vSize2((*previous_element)->start_point - (*element)->start_point); //From the "end" of the previous element to the start of this element.
+                backward_distance = vSize2((*previous_element)->start_point - (*element)->end_point); //From the "end" of the previous element to the start of this element.
+            }
+            (*element)->is_reversed = backward_distance < forward_distance;
         }
-        else
-        {
-            forward_distance = vSize2((*previous_element)->start_point - (*element)->start_point); //From the "end" of the previous element to the start of this element.
-            backward_distance = vSize2((*previous_element)->start_point - (*element)->end_point); //From the "end" of the previous element to the start of this element.
-        }
-        (*element)->is_reversed = backward_distance < forward_distance;
     }
     
     if(starting_point) //If there is a starting point, add it at the best position.
