@@ -366,11 +366,13 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
                 }
             }
         }
+        ListElement last_element = result.end(); //In order to check whether it should be inserted at the end.
+        last_element--;
         if(best_insert == result.end()) //Starting point should be inserted at the beginning.
         {
             //Then the path is already correct.
         }
-        else if(best_insert == --result.end()) //Starting point should be inserted at the end. This means that the path must be reversed.
+        else if(best_insert == last_element) //Starting point should be inserted at the end. This means that the path must be reversed.
         {
             for(Waypoint<E>* waypoint : result)
             {
