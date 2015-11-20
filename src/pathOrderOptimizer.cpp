@@ -156,11 +156,11 @@ void LineOrderOptimizer::optimize()
     
     TravellingSalesman<size_t> tspsolver([&](size_t cluster_index) -> Point
         {
-            return polygons[line_clusters[cluster_index][0]][0];
+            return polygons[line_clusters[cluster_index][0]][polyStart[line_clusters[cluster_index][0]]];
         }
         ,[&](size_t cluster_index) -> Point
         {
-            return polygons[line_clusters[cluster_index].back()].back();
+            return polygons[line_clusters[cluster_index].back()][(polyStart[line_clusters[cluster_index].back()] - 1) % polygons[line_clusters[cluster_index].back()].size()];
         }
     ); //Solves the macro TSP problem of ordering the clusters.
     std::vector<bool> reverse_clusters;
@@ -182,9 +182,9 @@ void LineOrderOptimizer::optimize()
         }
         else //Insert the lines in backward direction.
         {
-            for(size_t polygon_index = 1;polygon_index < cluster.size();polygon_index++)
+            for(size_t polygon_index = cluster.size();polygon_index-- > 0;)
             {
-                polyOrder.push_back(static_cast<int>(cluster[cluster.size() - polygon_index - 1]));
+                polyOrder.push_back(static_cast<int>(cluster[polygon_index]));
             }
         }
     }
@@ -236,6 +236,7 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
         }
         clusters.push_back(std::vector<size_t>()); //Make a new cluster for this line.
         clusters.back().push_back(polygon_index);
+        polyStart[polygon_index] = 0; //Decide on a start for the first line. Optimising this would double the processing time, so just pick one.
         picked[polygon_index] = true;
         size_t current_polygon = polygon_index; //We'll do a walk to the nearest valid neighbour. A neighbour is valid if it is not picked yet and if both its endpoints are near.
         size_t best_polygon = current_polygon;
