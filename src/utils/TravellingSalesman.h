@@ -334,7 +334,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
         int64_t best_distance = std::numeric_limits<int64_t>::max(); //Minimise this distance.
         ListElement best_insert; //Where to insert the element. It will be inserted after this element. If it's nullptr, insert at the very front.
         
-        int64_t distance = vSize(starting_waypoint->average_point - (*result.begin())->average_point); //From the starting point to the first element.
+        int64_t distance = vSize(starting_waypoint->average_point - ((*result.begin())->is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point)); //From the starting point to the first element.
         if(distance < best_distance)
         {
             best_distance = distance;
@@ -346,7 +346,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             after_insert++; //Get the element after the current element.
             if(after_insert == result.end()) //There is no next element. We're inserting at the end of the path.
             {
-                int64_t distance = vSize((*before_insert)->average_point - starting_waypoint->average_point); //From the last element to this element.
+                int64_t distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - starting_waypoint->average_point); //From the last element to this element.
                 if(distance < best_distance)
                 {
                     best_distance = distance;
@@ -355,9 +355,9 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             }
             else //There is a next element. We're inserting somewhere in the middle.
             {
-                int64_t removed_distance = vSize((*before_insert)->average_point - (*after_insert)->average_point); //Distance of the original move that we'll remove.
-                int64_t after_distance = vSize(starting_waypoint->average_point - (*after_insert)->average_point); //From the starting point to the new start of the path.
-                int64_t path_closing_distance = vSize((*result.begin())->average_point - (*result.end())->average_point); //We'd cycle the start of the path, which means that the original start and end of the path will be connected.
+                int64_t removed_distance = vSize(((*before_insert)->is_reversed ? (*before_insert)->start_point : (*before_insert)->end_point) - ((*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point)); //Distance of the original move that we'll remove.
+                int64_t after_distance = vSize(starting_waypoint->average_point - ((*after_insert)->is_reversed ? (*after_insert)->end_point : (*after_insert)->start_point)); //From the starting point to the new start of the path.
+                int64_t path_closing_distance = vSize(((*result.begin())->is_reversed ? (*result.begin())->end_point : (*result.begin())->start_point) - ((*result.end())->is_reversed ? (*result.end())->start_point : (*result.end())->end_point)); //We'd cycle the start of the path, which means that the original start and end of the path will be connected.
                 int64_t distance = after_distance + path_closing_distance - removed_distance;
                 if(distance < best_distance)
                 {
@@ -368,11 +368,11 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
         }
         ListElement last_element = result.end(); //In order to check whether it should be inserted at the end.
         last_element--;
-        if(best_insert == result.end()) //Starting point should be inserted at the beginning.
+        if(best_insert == result.begin()) //Starting point should be inserted at the beginning.
         {
             //Then the path is already correct.
         }
-        else if(best_insert == last_element) //Starting point should be inserted at the end. This means that the path must be reversed.
+        else if(best_insert == result.end()) //Starting point should be inserted at the end. This means that the path must be reversed.
         {
             for(Waypoint<E>* waypoint : result)
             {
