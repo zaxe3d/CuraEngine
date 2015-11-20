@@ -31,7 +31,7 @@ template<class E> struct Waypoint
      */
     Waypoint(Point start_point,Point end_point,E element) : start_point(start_point),end_point(end_point),element(element)
     {
-        average_point = start_point + end_point / 2; //Compute the average point from the start and end points.
+        average_point = Point((start_point.X + end_point.X) >> 1,(start_point.Y + end_point.Y) >> 1); //Compute the average point from the start and end points.
     }
     
     /*!
@@ -45,7 +45,7 @@ template<class E> struct Waypoint
      */
     Waypoint(Point start_point,Point end_point) : start_point(start_point),end_point(end_point)
     {
-        average_point = start_point + end_point / 2; //Compute the average point from the start and end points.
+        average_point = Point((start_point.X + end_point.X) >> 1,(start_point.Y + end_point.Y) >> 1); //Compute the average point from the start and end points.
     }
     
     /*!
