@@ -141,6 +141,23 @@ public:
     }
     
     /*!
+     * \brief Draws the specified list of polygons on the canvas.
+     * 
+     * Each polygon is drawn in sequence.
+     * 
+     * \param polygons A vector of polygons to draw.
+     * \param colour The colour of the fill of the polygons.
+     * \param outline_colour The colour of the outline of the polygons.
+     */
+    void writeAreas(const std::vector<PolygonRef>& polygons, Color colour = Color::GRAY, Color outline_colour = Color::BLACK) 
+    {
+        for(PolygonRef polygon : polygons)
+        {
+            writeAreas(polygon,colour,outline_colour);
+        }
+    }
+    
+    /*!
      * \brief Draws the specified polygon on the canvas.
      * 
      * The polygon is always closed and has an outline and fill colour that you
@@ -158,7 +175,7 @@ public:
             Point transformed = transform(point);
             fprintf(out, "%lli,%lli ", transformed.X, transformed.Y);
         }
-        fprintf(out, "\" fill=\"%s\" stroke=\"%s\" />\n", toString(colour).c_str(),toString(outline_colour).c_str());
+        fprintf(out, "\" fill=\"%s\" stroke=\"%s\" stroke-width=\"4\" />\n", toString(colour).c_str(),toString(outline_colour).c_str());
     }
     
     void writeAreas(std::vector<Point> polygon,Color color = Color::GRAY,Color outline_color = Color::BLACK)
@@ -230,7 +247,7 @@ public:
     {
         Point fa = transform(a);
         Point fb = transform(b);
-        fprintf(out, "<line x1=\"%lli\" y1=\"%lli\" x2=\"%lli\" y2=\"%lli\" style=\"stroke:%s;stroke-width:1\" />\n", fa.X, fa.Y, fb.X, fb.Y, toString(color).c_str());
+        fprintf(out, "<line x1=\"%lli\" y1=\"%lli\" x2=\"%lli\" y2=\"%lli\" style=\"stroke:%s;stroke-width:4\" />\n", fa.X, fa.Y, fb.X, fb.Y, toString(color).c_str());
     }
     
     /*!
