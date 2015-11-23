@@ -247,7 +247,7 @@ public:
     {
         Point fa = transform(a);
         Point fb = transform(b);
-        fprintf(out, "<line x1=\"%lli\" y1=\"%lli\" x2=\"%lli\" y2=\"%lli\" style=\"stroke:%s;stroke-width:4\" />\n", fa.X, fa.Y, fb.X, fb.Y, toString(color).c_str());
+        fprintf(out, "<line x1=\"%lli\" y1=\"%lli\" x2=\"%lli\" y2=\"%lli\" stroke=\"%s\" />\n", fa.X, fa.Y, fb.X, fb.Y, toString(color).c_str());
     }
     
     /*!
