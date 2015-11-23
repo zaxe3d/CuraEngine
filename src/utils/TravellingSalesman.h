@@ -378,6 +378,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             {
                 waypoint->is_reversed = !waypoint->is_reversed; //Reverse all waypoints.
             }
+            result.reverse();
         }
         else //Starting point should be somewhere in the middle! Uh-oh!
         {
