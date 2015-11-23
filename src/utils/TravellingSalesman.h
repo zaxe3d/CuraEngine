@@ -258,7 +258,7 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
     {
         Waypoint<E>* waypoint = shuffle[next_to_insert];
         int64_t best_distance = std::numeric_limits<int64_t>::max(); //Minimise this distance.
-        ListElement best_insert; //Where to insert the element. It will be inserted after this element. If it's nullptr, insert at the very front.
+        ListElement best_insert; //Where to insert the element. It will be inserted before this element. If it's nullptr, insert at the very front.
         
         //First try inserting before the first element.
         int64_t distance = vSize(waypoint->average_point - (*result.begin())->average_point); //From this element to the first element.
@@ -294,11 +294,11 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
             }
         }
         //Actually insert the waypoint at the best position we found.
-        if(best_insert == result.end()) //We must insert at the very start.
+        if(best_insert == result.end()) //We must insert at the very end.
         {
             result.push_back(waypoint);
         }
-        else //We must insert after best_insert.
+        else //We must insert before best_insert.
         {
             result.insert(best_insert,waypoint);
         }
