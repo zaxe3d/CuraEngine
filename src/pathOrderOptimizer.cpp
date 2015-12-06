@@ -154,37 +154,60 @@ void LineOrderOptimizer::optimize()
     }
     std::vector<std::vector<size_t>> line_clusters = cluster();
     
-    TravellingSalesman<size_t> tspsolver([&](size_t cluster_index) -> Point
+    TravellingSalesman<size_t> tspsolver([&](size_t cluster_index) -> std :: vector<Point>
         {
-            return polygons[line_clusters[cluster_index][0]][polyStart[line_clusters[cluster_index][0]]];
+            std :: vector<Point> result;
+            result . push_back(polygons[line_clusters[cluster_index][0]][polyStart[line_clusters[cluster_index][0]]]); //Not reversed, not mirrored.
+            result . push_back(polygons[line_clusters[cluster_index] . back()][(polyStart[line_clusters[cluster_index] . back()] - 1) % polygons[line_clusters[cluster_index] . back()] . size()]); //Reversed, not mirrored.
+            if (line_clusters[cluster_index] . size() > 1u) //If the cluster has one line, mirroring the line is equal to reversing the path. Otherwise, we must also include the option of mirrored lines.
+            {
+                result . push_back(polygons[line_clusters[cluster_index][0]][(polyStart[line_clusters[cluster_index][0]] - 1) % polygons[line_clusters[cluster_index][0]] . size()]); //Not reversed, mirrored.
+                result . push_back(polygons[line_clusters[cluster_index] . back()][polyStart[line_clusters[cluster_index] . back()]]); //Reversed, mirrored.
+            }
+            return result;
         }
-        ,[&](size_t cluster_index) -> Point
+        ,[&](size_t cluster_index) -> std :: vector<Point>
         {
-            return polygons[line_clusters[cluster_index].back()][(polyStart[line_clusters[cluster_index].back()] - 1) % polygons[line_clusters[cluster_index].back()].size()];
+            std :: vector<Point> result;
+            result . push_back(polygons[line_clusters[cluster_index] . back()][(polyStart[line_clusters[cluster_index] . back()] - 1) % polygons[line_clusters[cluster_index] . back()] . size()]); //Not reversed, not mirrored.
+            result . push_back(polygons[line_clusters[cluster_index][0]][polyStart[line_clusters[cluster_index][0]]]); //Reversed, not mirrored.
+            if (line_clusters[cluster_index] . size() > 1u) //The mirrored cases.
+            {
+                result . push_back(polygons[line_clusters[cluster_index] . back()][polyStart[line_clusters[cluster_index] . back()]]); //Not reversed, mirrored.
+                result . push_back(polygons[line_clusters[cluster_index][0]][(polyStart[line_clusters[cluster_index][0]] - 1) % polygons[line_clusters[cluster_index][0]] . size()]); //Reversed, mirrored.
+            }
+            return result;
         }
     ); //Solves the macro TSP problem of ordering the clusters.
-    std::vector<bool> reverse_clusters;
+    std :: vector<size_t> cluster_orientations;
     std::vector<size_t> unoptimised(line_clusters.size());
     std::iota(unoptimised.begin(),unoptimised.end(),0);
-    std::vector<size_t> optimised = tspsolver.findPath(unoptimised,reverse_clusters,&startPoint); //Approximate the shortest path with the TSP solver.
+    std :: vector<size_t> optimised = tspsolver.findPath(unoptimised, cluster_orientations, &startPoint); //Approximate the shortest path with the TSP solver.
     
     //Actually put the paths in their correct order for the output.
     polyOrder.reserve(polygons.size());
     for(size_t cluster_index = 0;cluster_index < optimised.size();cluster_index++)
     {
         std::vector<size_t> cluster = line_clusters[optimised[cluster_index]];
-        if(!reverse_clusters[cluster_index]) //Insert the lines in forward direction.
+        if (cluster_orientations[cluster_index] % 1 == 0) //Not reversed.
         {
-            for(size_t polygon_index = 0;polygon_index < cluster.size();polygon_index++)
+            for (size_t polygon_index = 0; polygon_index < cluster . size(); polygon_index++)
             {
-                polyOrder.push_back(static_cast<int>(cluster[polygon_index]));
+                polyOrder . push_back(static_cast<int>(cluster[polygon_index]));
             }
         }
-        else //Insert the lines in backward direction.
+        else //Reversed.
         {
-            for(size_t polygon_index = cluster.size();polygon_index-- > 0;)
+            for (size_t polygon_index = cluster . size(); polygon_index-- > 0; ) //Insert the lines in backward direction.
             {
-                polyOrder.push_back(static_cast<int>(cluster[polygon_index]));
+                polyOrder . push_back(static_cast<int>(cluster[polygon_index]));
+            }
+        }
+        if (cluster_orientations[cluster_index] >= 2u) //Mirrored.
+        {
+            for (size_t polygon_index : cluster) //Mirror each line in the cluster.
+            {
+                polyStart[polygon_index] = 1 - polyStart[polygon_index];
             }
         }
     }

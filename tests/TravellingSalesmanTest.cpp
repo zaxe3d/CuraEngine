@@ -11,12 +11,33 @@ CPPUNIT_TEST_SUITE_REGISTRATION(TravellingSalesmanTest);
 void TravellingSalesmanTest::setUp()
 {
     tsp_points = new TravellingSalesman<Point>(
-        [&](Point point) -> Point { return point; } //For points, just return the point itself as both start and end points.
-       ,[&](Point point) -> Point { return point; }
+        [&](Point point) -> std :: vector<Point> { return { point }; } //For points, just return the point itself as both start and end points.
+       ,[&](Point point) -> std :: vector<Point> { return { point }; }
     );
-    tsp_paths = new TravellingSalesman<std::vector<Point>>(
-        [&](std::vector<Point> path) -> Point { return path.empty() ? Point(0,0) : path[0]; } //For paths, return the first and last element of the path.
-       ,[&](std::vector<Point> path) -> Point { return path.empty() ? Point(0,0) : path[path.size() - 1]; }
+    tsp_paths = new TravellingSalesman<std::vector<Point>>( //For paths, return the first and last element of the path.
+        [&](std :: vector<Point> path) -> std :: vector<Point>
+        {
+            if (path . empty())
+            {
+                return { Point(0, 0) };
+            }
+            else
+            {
+                return { path[0], path . back() };
+                
+            }
+        },
+        [&](std :: vector<Point> path) -> std :: vector<Point>
+        {
+            if (path . empty())
+            {
+                return { Point(0, 0) };
+            }
+            else
+            {
+                return { path . back(), path[0] };
+            }
+        }
     );
 }
 
@@ -31,7 +52,8 @@ void TravellingSalesmanTest::twoPointsTest()
     std::vector<Point> points;
     points.push_back(Point(0,0));
     points.push_back(Point(100,0));
-    std::vector<Point> result = tsp_points->findPathNoReverse(points);
+    std :: vector<size_t> orientations;
+    std :: vector<Point> result = tsp_points -> findPath(points, orientations);
     
     bijective(points,result); //Assert that all points in the two vectors are equal.
 }
@@ -45,7 +67,8 @@ void TravellingSalesmanTest::fivePointsTest()
     points.push_back(Point(100,0));
     points.push_back(Point(0,0));
     
-    std::vector<Point> result = tsp_points->findPathNoReverse(points);
+    std :: vector<size_t> orientations;
+    std :: vector<Point> result = tsp_points -> findPath(points, orientations);
     
     bijective(points,result); //Assert that all points in the two vectors are equal.
 }
