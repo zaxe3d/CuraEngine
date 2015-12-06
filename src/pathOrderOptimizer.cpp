@@ -189,7 +189,7 @@ void LineOrderOptimizer::optimize()
     for(size_t cluster_index = 0;cluster_index < optimised.size();cluster_index++)
     {
         std::vector<size_t> cluster = line_clusters[optimised[cluster_index]];
-        if (cluster_orientations[cluster_index] % 1 == 0) //Not reversed.
+        if ((cluster_orientations[cluster_index] & 1) == 0) //Not reversed.
         {
             for (size_t polygon_index = 0; polygon_index < cluster . size(); polygon_index++)
             {
