@@ -74,7 +74,7 @@ template<class E> struct Waypoint
  */
 template<class E> class TravellingSalesman
 {
-    typedef typename std::list<Waypoint<E>*>::iterator ListElement; //To help the compiler with templates in templates.
+    typedef typename std :: list<Waypoint<E>*> :: iterator WaypointListIterator; //To help the compiler with templates in templates.
 
 public:
     /*!
@@ -211,7 +211,7 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
     {
         Waypoint<E>* waypoint = shuffle[next_to_insert];
         int64_t best_distance = std :: numeric_limits<int64_t> :: max(); //Change in travel distance to insert the waypoint. Minimise this distance by varying the insertion point and orientation.
-        ListElement best_insert; //Where to insert the element. It will be inserted before this element. If it's nullptr, insert at the very front.
+        WaypointListIterator best_insert; //Where to insert the element. It will be inserted before this element. If it's nullptr, insert at the very front.
         size_t best_orientation; //In what orientation to insert the element.
         
         //First try inserting before the first element.
@@ -231,9 +231,9 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
                 best_orientation = orientation;
             }
         }
-        for (ListElement before_insert = result . begin(); before_insert != result . end(); before_insert++) //Try inserting at the other positions.
+        for (WaypointListIterator before_insert = result . begin(); before_insert != result . end(); before_insert++) //Try inserting at the other positions.
         {
-            ListElement after_insert = before_insert;
+            WaypointListIterator after_insert = before_insert;
             after_insert++; //Get the element after the current element.
             if(after_insert == result.end()) //There is no next element. We're inserting at the end of the path.
             {
