@@ -37,22 +37,6 @@ template<class E> struct Waypoint
     }
     
     /*!
-     * \brief Constructs a new waypoint with the specified possible start and
-     * end point.
-     * 
-     * The waypoint will contain no element. Please keep track of this, as
-     * trying to access the element will access uninitialised memory.
-     * 
-     * \param start_points The possible start points of the waypoint, one for
-     * each orientation.
-     * \param end_points The possible end points of the waypoint, one for each
-     * orientation.
-     */
-    Waypoint(std :: vector<Point> start_points, std :: vector<Point> end_points) : start_points(start_points), end_points(end_points)
-    {
-    }
-    
-    /*!
      * \brief The possible starting points of the waypoint's internal path.
      * 
      * This will hold one element for each orientation in which the element can
