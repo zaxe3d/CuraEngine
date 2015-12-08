@@ -194,25 +194,36 @@ void LineOrderOptimizer::optimize()
     for(size_t cluster_index = 0;cluster_index < optimised.size();cluster_index++)
     {
         std::vector<size_t> cluster = line_clusters[optimised[cluster_index]];
-        if ((cluster_orientations[cluster_index] & 1) == 0) //Not reversed.
+        if (cluster.size() == 1) //Singleton clusters have only 2 possible orientations.
         {
-            for (size_t polygon_index = 0; polygon_index < cluster . size(); polygon_index++)
+            polyOrder.push_back(static_cast<int>(cluster[0]));
+            if (cluster_orientations[cluster_index] >= 1)
             {
-                polyOrder . push_back(static_cast<int>(cluster[polygon_index]));
+                polyStart[cluster[0]] = 1 - polyStart[cluster[0]];
             }
         }
-        else //Reversed.
+        else //Larger clusters have 4 possible orientations.
         {
-            for (size_t polygon_index = cluster . size(); polygon_index-- > 0; ) //Insert the lines in backward direction.
+            if ((cluster_orientations[cluster_index] & 1) == 0) //Not reversed.
             {
-                polyOrder . push_back(static_cast<int>(cluster[polygon_index]));
+                for (size_t polygon_index = 0; polygon_index < cluster . size(); polygon_index++)
+                {
+                    polyOrder . push_back(static_cast<int>(cluster[polygon_index]));
+                }
             }
-        }
-        if (cluster_orientations[cluster_index] >= 2u) //Mirrored.
-        {
-            for (size_t polygon_index : cluster) //Mirror each line in the cluster.
+            else //Reversed.
             {
-                polyStart[polygon_index] = 1 - polyStart[polygon_index];
+                for (size_t polygon_index = cluster . size(); polygon_index-- > 0; ) //Insert the lines in backward direction.
+                {
+                    polyOrder . push_back(static_cast<int>(cluster[polygon_index]));
+                }
+            }
+            if (cluster_orientations[cluster_index] >= 2u) //Mirrored.
+            {
+                for (size_t polygon_index : cluster) //Mirror each line in the cluster.
+                {
+                    polyStart[polygon_index] = 1 - polyStart[polygon_index];
+                }
             }
         }
     }
