@@ -272,7 +272,7 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
             Point current_start = polygons[current_polygon][polyStart[current_polygon]]; //Start and end point of the current polygon. These are used to find the distance to the next polygon.
             Point current_end = polygons[current_polygon][(polyStart[current_polygon] - 1) % polygons[current_polygon].size()];
             best_polygon = static_cast<size_t>(-1);
-            long long best_distance = cluster_grid_size * cluster_grid_size << 1; //grid_size squared since vSize2 gives squared distance, and *2 since both endpoints are considered.
+            unsigned long long best_distance = cluster_grid_size * cluster_grid_size + 1; //grid_size squared since vSize2 gives squared distance.
             size_t best_start;
             for(size_t neighbour : grid.findNearbyObjects(polygons[current_polygon][0]))
             {
@@ -280,19 +280,27 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
                 {
                     continue;
                 }
-                long long distance = vSize2(current_start - polygons[neighbour][0]) + vSize2(current_end - polygons[neighbour].back());
-                if(distance < best_distance)
+                unsigned long long distance_start_start = vSize2(current_start - polygons[neighbour][0]);
+                unsigned long long distance_start_end = vSize2(current_start - polygons[neighbour].back());
+                unsigned long long distance_end_start = vSize2(current_end - polygons[neighbour][0]);
+                unsigned long long distance_end_end = vSize2(current_end - polygons[neighbour].back());
+                if (distance_start_start < cluster_grid_size * cluster_grid_size && distance_end_end < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other.
                 {
-                    best_polygon = neighbour;
-                    best_distance = distance;
-                    best_start = polygons[neighbour].size() - 1; //Start the neighbour where the current line ends.
+                    if (distance_end_end < best_distance) //Best neighbour and orientation so far.
+                    {
+                        best_polygon = neighbour;
+                        best_distance = distance_end_end;
+                        best_start = polygons[neighbour].size() - 1;
+                    }
                 }
-                distance = vSize2(current_end - polygons[neighbour][0]) + vSize2(current_start - polygons[neighbour].back()); //Also try reversing the direction of the line.
-                if(distance < best_distance)
+                if (distance_start_end < cluster_grid_size * cluster_grid_size && distance_end_start < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other, but in reverse direction.
                 {
-                    best_polygon = neighbour;
-                    best_distance = distance;
-                    best_start = 0; //Start the neighbour where the current line ends.
+                    if (distance_end_start < best_distance)
+                    {
+                        best_polygon = neighbour;
+                        best_distance = distance_end_start;
+                        best_start = 0;
+                    }
                 }
             }
             if(best_polygon != static_cast<size_t>(-1)) //We found one.
