@@ -298,7 +298,7 @@ void GCodePlanner::addPolygonsByOptimizer(Polygons& polygons, GCodePathConfig* c
 }
 void GCodePlanner::addLinesByOptimizer(Polygons& polygons, GCodePathConfig* config, SpaceFillType space_fill_type, int wipe_dist)
 {
-    LineOrderOptimizer orderOptimizer(lastPosition);
+    LineOrderOptimizer orderOptimizer(lastPosition, storage.getSettingInMicrons("infill_line_distance")); //Use infill line distance to make adjacent infill lines fall in the same cluster.
     for(unsigned int i=0;i<polygons.size();i++)
         orderOptimizer.addPolygon(polygons[i]);
     orderOptimizer.optimize();

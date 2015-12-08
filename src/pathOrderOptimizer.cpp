@@ -142,6 +142,11 @@ int PathOrderOptimizer::getFarthestPointInPolygon(int poly_idx)
     return best_point_idx;
 }
 
+LineOrderOptimizer::LineOrderOptimizer(const Point& start_point, unsigned long long cluster_grid_size)
+    : cluster_grid_size(cluster_grid_size == 0 ? 5000 : cluster_grid_size) //Initialise cluster_grid_size to 5000 if the input grid size is invalid (e.g. no infill).
+{
+    this->startPoint = start_point;
+}
 
 /**
 *
@@ -240,8 +245,7 @@ inline void LineOrderOptimizer::checkIfLineIsBest(unsigned int i_line_polygon, i
 std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
 {
     polyStart.resize(polygons.size()); //Polystart should always contain an entry for all polygons.
-    long long grid_size = 5000; //Maximum distance of lines that get clustered.
-    BucketGrid2D<size_t> grid(grid_size);
+    BucketGrid2D<size_t> grid(cluster_grid_size);
     for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //First put every endpoint of all lines in the grid.
     {
         grid.insert(polygons[polygon_index][0],polygon_index);
@@ -268,7 +272,7 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
             Point current_start = polygons[current_polygon][polyStart[current_polygon]]; //Start and end point of the current polygon. These are used to find the distance to the next polygon.
             Point current_end = polygons[current_polygon][(polyStart[current_polygon] - 1) % polygons[current_polygon].size()];
             best_polygon = static_cast<size_t>(-1);
-            long long best_distance = grid_size * grid_size << 1; //grid_size squared since vSize2 gives squared distance, and *2 since both endpoints are considered.
+            long long best_distance = cluster_grid_size * cluster_grid_size << 1; //grid_size squared since vSize2 gives squared distance, and *2 since both endpoints are considered.
             size_t best_start;
             for(size_t neighbour : grid.findNearbyObjects(polygons[current_polygon][0]))
             {
