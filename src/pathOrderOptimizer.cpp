@@ -194,17 +194,19 @@ void LineOrderOptimizer::optimize()
     for(size_t cluster_index = 0;cluster_index < optimised.size();cluster_index++)
     {
         std::vector<size_t> cluster = line_clusters[optimised[cluster_index]];
+        //Determine in what orientation we should place the cluster depending on cluster_orientations[cluster_index].
+        size_t orientation = cluster_orientations[cluster_index];
         if (cluster.size() == 1) //Singleton clusters have only 2 possible orientations.
         {
             polyOrder.push_back(static_cast<int>(cluster[0]));
-            if (cluster_orientations[cluster_index] >= 1)
+            if (orientation >= 1)
             {
                 polyStart[cluster[0]] = 1 - polyStart[cluster[0]];
             }
         }
         else //Larger clusters have 4 possible orientations.
         {
-            if ((cluster_orientations[cluster_index] & 1) == 0) //Not reversed.
+            if ((orientation & 1) == 0) //Not reversed.
             {
                 for (size_t polygon_index = 0; polygon_index < cluster . size(); polygon_index++)
                 {
@@ -218,7 +220,7 @@ void LineOrderOptimizer::optimize()
                     polyOrder . push_back(static_cast<int>(cluster[polygon_index]));
                 }
             }
-            if (cluster_orientations[cluster_index] >= 2u) //Mirrored.
+            if (orientation >= 2u) //Mirrored.
             {
                 for (size_t polygon_index : cluster) //Mirror each line in the cluster.
                 {
