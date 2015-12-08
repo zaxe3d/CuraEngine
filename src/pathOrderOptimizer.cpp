@@ -143,7 +143,7 @@ int PathOrderOptimizer::getFarthestPointInPolygon(int poly_idx)
 }
 
 LineOrderOptimizer::LineOrderOptimizer(const Point& start_point, unsigned long long cluster_grid_size)
-    : cluster_grid_size(cluster_grid_size == 0 ? 5000 : cluster_grid_size) //Initialise cluster_grid_size to 5000 if the input grid size is invalid (e.g. no infill).
+    : cluster_grid_size(cluster_grid_size == 0 ? 2000 : cluster_grid_size) //Initialise cluster_grid_size to 2000 if the input grid size is invalid (e.g. no infill).
 {
     this->startPoint = start_point;
 }
