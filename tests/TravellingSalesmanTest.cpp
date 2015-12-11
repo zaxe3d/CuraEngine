@@ -10,35 +10,20 @@ CPPUNIT_TEST_SUITE_REGISTRATION(TravellingSalesmanTest);
 
 void TravellingSalesmanTest::setUp()
 {
-    tsp_points = new TravellingSalesman<Point>(
-        [&](Point point) -> std :: vector<Point> { return { point }; } //For points, just return the point itself as both start and end points.
-       ,[&](Point point) -> std :: vector<Point> { return { point }; }
-    );
+    tsp_points = new TravellingSalesman<Point>([&](Point point) -> std::vector<std::pair<Point, Point>> { return { std::make_pair(point, point) }; }); //For points, just return the point itself as both start and end points.
     tsp_paths = new TravellingSalesman<std::vector<Point>>( //For paths, return the first and last element of the path.
-        [&](std :: vector<Point> path) -> std :: vector<Point>
-        {
-            if (path . empty())
+        [&](std::vector<Point> path) -> std::vector<std::pair<Point, Point>>
             {
-                return { Point(0, 0) };
+                if (path.empty())
+                {
+                    return { std::make_pair(Point(0, 0), Point(0, 0)) };
+                }
+                std::vector<std::pair<Point, Point>> result;
+                result.push_back(std::make_pair(path[0], path.back()));
+                result.push_back(std::make_pair(path.back(), path[0]));
+                return result;
             }
-            else
-            {
-                return { path[0], path . back() };
-                
-            }
-        },
-        [&](std :: vector<Point> path) -> std :: vector<Point>
-        {
-            if (path . empty())
-            {
-                return { Point(0, 0) };
-            }
-            else
-            {
-                return { path . back(), path[0] };
-            }
-        }
-    );
+        );
 }
 
 void TravellingSalesmanTest::tearDown()

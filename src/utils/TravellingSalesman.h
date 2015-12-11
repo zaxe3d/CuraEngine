@@ -9,7 +9,6 @@
 #include <algorithm> //For std::shuffle to randomly shuffle the array.
 #include <list> //For std::list, which is used to insert stuff in the result in constant time.
 #include <random> //For the RNG. Note: CuraEngine should be deterministic! Always use a FIXED SEED!
-#include <cassert> //For asserting that the lists returned by the function parameters have the same size.
 
 namespace cura
 {
@@ -30,31 +29,24 @@ template<class E> struct Waypoint
      * \brief Constructs a new waypoint with the specified possible start and
      * end points and the specified element.
      * 
-     * \param start_points The possible start points of the waypoint, one for
-     * each orientation.
-     * \param end_points The possible end points of the waypoint, one for each
-     * orientation.
+     * \param orientations The possible start and end points of the waypoints
+     * for each orientation the element could be placed in.
      * \param element The element that's to be bound to this waypoint.
      */
-    Waypoint(std :: vector<Point> start_points, std :: vector<Point> end_points, E element) : start_points(start_points), end_points(end_points), element(element)
+    Waypoint(std::vector<std::pair<Point, Point>> orientations, E element) : orientations(orientations), element(element)
     {
     }
     
     /*!
-     * \brief The possible starting points of the waypoint's internal path.
+     * \brief The possible orientations in which the waypoint could be placed in
+     * the path.
      * 
-     * This will hold one element for each orientation in which the element can
-     * be inserted in the path.
+     * This defines in what direction or way the element in this waypoint should
+     * be traversed in the final path. The Travelling Salesman solution only
+     * requires the start and end point of this traversal in order to piece the
+     * waypoint into the path.
      */
-    std :: vector<Point> start_points;
-    
-    /*!
-     * \brief The possible ending points of the waypoint's internal path.
-     * 
-     * This will hold one element for each orientation in which the element can
-     * be inserted in the path.
-     */
-    std :: vector<Point> end_points;
+    std::vector<std::pair<Point, Point>> orientations;
     
     /*!
      * \brief The actual element this waypoint holds.
@@ -65,9 +57,10 @@ template<class E> struct Waypoint
      * \brief The optimal orientation of this waypoint in the final path.
      * 
      * This is computed during the <em>TravellingSalesman::findPath</em>
-     * function.
+     * function. It indicates an index in \link orientations that provides the
+     * shortest path.
      */
-    size_t orientation;
+    size_t best_orientation;
 };
 
 /*!
@@ -89,18 +82,12 @@ public:
     /*!
      * \brief Constructs an instance of Travelling Salesman.
      * 
-     * \param get_start A function to get possible starting points for elements
-     * in the path. The vector contains different orientations in which the
-     * elements could be traversed in the final path. This function must always
-     * return a vector of the same length as the vector returned by \p get_end
-     * on the same element.
-     * \param get_end A function to get possible ending points for elements in
-     * the path. The vector contains different orientations in which the
-     * elements could be traversed in the final path. This function must always
-     * return a vector of the same length as the vector returned by \p get_start
-     * on the same element.
+     * \param get_orientations A function to get possible orientations for
+     * elements in the path. Each orientation defines a possible way that the
+     * element could be inserted in the path. To do that it must provide a
+     * start point and an end point for each orientation.
      */
-    TravellingSalesman(std :: function<std :: vector<Point>(E)> get_starts, std :: function<std :: vector<Point>(E)> get_ends) : get_starts(get_starts), get_ends(get_ends)
+    TravellingSalesman(std::function<std::vector<std::pair<Point, Point>>(E)> get_orientations) : get_orientations(get_orientations)
     {
         //Do nothing. All parameters are already copied to fields.
     }
@@ -143,14 +130,11 @@ public:
     
 protected:
     /*!
-     * \brief Function to use to get the possible start points of an element.
+     * \brief Function to use to get the possible orientations of an element.
+     * 
+     * Each orientation has a start point and an end point, in that order.
      */
-    std :: function<std :: vector<Point>(E)> get_starts;
-    
-    /*!
-     * \brief Function to use to get the possible end points of an element.
-     */
-    std :: function<std :: vector<Point>(E)> get_ends;
+    std::function<std::vector<std::pair<Point, Point>>(E)> get_orientations;
     
 private:
     /*!
@@ -196,23 +180,23 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
     
     if (!starting_point) //If there is no starting point, just insert the initial element.
     {
-        shuffle[0] -> orientation = 0; //Choose an arbitrary orientation for the first element.
+        shuffle[0]->best_orientation = 0; //Choose an arbitrary orientation for the first element.
         result . push_back(shuffle[0]); //Due to the check at the start, we know that shuffled always contains at least 1 element.
     }
     else //If there is a starting point, insert the initial element after it.
     {
         int64_t best_distance = std :: numeric_limits<int64_t> :: max(); //Change in travel distance to insert the waypoint. Minimise this distance by varying the orientation.
         size_t best_orientation; //In what orientation to insert the element.
-        for (size_t orientation = 0; orientation < shuffle[0] -> start_points . size(); orientation++)
+        for (size_t orientation = 0; orientation < shuffle[0]->orientations.size(); orientation++)
         {
-            int64_t distance = vSize(*starting_point - shuffle[0] -> start_points[orientation]); //Distance from the starting point to the start point of this element.
+            int64_t distance = vSize(*starting_point - shuffle[0]->orientations[orientation].first); //Distance from the starting point to the start point of this element.
             if (distance < best_distance)
             {
                 best_distance = distance;
                 best_orientation = orientation;
             }
         }
-        shuffle[0] -> orientation = best_orientation;
+        shuffle[0]->best_orientation = best_orientation;
         result . push_back(shuffle[0]);
     }
 
@@ -224,14 +208,14 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
         size_t best_orientation; //In what orientation to insert the element.
         
         //First try inserting before the first element.
-        for (size_t orientation = 0; orientation < waypoint -> start_points . size(); orientation++)
+        for (size_t orientation = 0; orientation < waypoint->orientations.size(); orientation++)
         {
             int64_t before_distance = 0;
             if (starting_point) //If there is a starting point, we're inserting between the first point and the starting point.
             {
-                before_distance = vSize(*starting_point - waypoint -> start_points[orientation]);
+                before_distance = vSize(*starting_point - waypoint->orientations[orientation].first);
             }
-            int64_t after_distance = vSize(waypoint -> end_points[orientation] - (*result.begin()) -> start_points[(*result . begin()) -> orientation]); //From the end of this element to the start of the first element.
+            int64_t after_distance = vSize(waypoint->orientations[orientation].second - (*result.begin()) -> orientations[(*result.begin())->best_orientation].first); //From the end of this element to the start of the first element.
             int64_t distance = before_distance + after_distance;
             if (distance < best_distance)
             {
@@ -246,9 +230,9 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
             after_insert++; //Get the element after the current element.
             if(after_insert == result.end()) //There is no next element. We're inserting at the end of the path.
             {
-                for (size_t orientation = 0; orientation < waypoint -> start_points . size(); orientation++)
+                for (size_t orientation = 0; orientation < waypoint->orientations.size(); orientation++)
                 {
-                    int64_t distance = vSize((*before_insert) -> end_points[(*before_insert) -> orientation] - waypoint -> start_points[orientation]); //From the end of the last element to the start of this element.
+                    int64_t distance = vSize((*before_insert)->orientations[(*before_insert)->best_orientation].second - waypoint->orientations[orientation].first); //From the end of the last element to the start of this element.
                     if (distance < best_distance)
                     {
                         best_distance = distance;
@@ -259,11 +243,11 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
             }
             else //There is a next element. We're inserting somewhere in the middle.
             {
-                for (size_t orientation = 0; orientation < waypoint -> start_points . size(); orientation++)
+                for (size_t orientation = 0; orientation < waypoint->orientations.size(); orientation++)
                 {
-                    int64_t removed_distance = vSize((*before_insert) -> end_points[(*before_insert) -> orientation] - (*after_insert) -> start_points[(*after_insert) -> orientation]); //Distance of the original move that we'll remove.
-                    int64_t before_distance = vSize((*before_insert) -> end_points[(*before_insert) -> orientation] - waypoint -> start_points[orientation]); //From end of previous element to start of this element.
-                    int64_t after_distance = vSize(waypoint -> end_points[orientation] - (*after_insert) -> start_points[(*after_insert) -> orientation]); //From end of this element to start of next element.
+                    int64_t removed_distance = vSize((*before_insert)->orientations[(*before_insert)->best_orientation].second - (*after_insert)->orientations[(*after_insert)->best_orientation].first); //Distance of the original move that we'll remove.
+                    int64_t before_distance = vSize((*before_insert)->orientations[(*before_insert)->best_orientation].second - waypoint->orientations[orientation].first); //From end of previous element to start of this element.
+                    int64_t after_distance = vSize(waypoint->orientations[orientation].second - (*after_insert)->orientations[(*after_insert)->best_orientation].first); //From end of this element to start of next element.
                     int64_t distance = before_distance + after_distance - removed_distance;
                     if (distance < best_distance)
                     {
@@ -275,7 +259,7 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
             }
         }
         //Actually insert the waypoint at the best position we found.
-        waypoint -> orientation = best_orientation;
+        waypoint->best_orientation = best_orientation;
         if (best_insert == result . end()) //We must insert at the very end.
         {
             result . push_back(waypoint);
@@ -294,7 +278,7 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
     for(Waypoint<E>* waypoint : result)
     {
         result_vector.push_back(waypoint->element);
-        element_orientations . push_back(waypoint -> orientation);
+        element_orientations.push_back(waypoint->best_orientation);
         delete waypoint; //Free the waypoint from memory. It is no longer needed from here on, since we copied the element in it to the output.
     }
     return result_vector;
@@ -307,10 +291,7 @@ template<class E> std::vector<Waypoint<E>*> TravellingSalesman<E>::fillWaypoints
     
     for(E element : elements) //Put every element in a waypoint.
     {
-        std :: vector<Point> starts = get_starts(element);
-        std :: vector<Point> ends = get_ends(element);
-        assert(starts . size() == ends . size()); //Functions must give an equal number of start points and end points.
-        Waypoint<E>* waypoint = new Waypoint<E>(get_starts(element), get_ends(element), element); //Yes, this must be deleted when the algorithm is done!
+        Waypoint<E>* waypoint = new Waypoint<E>(get_orientations(element), element); //Yes, this must be deleted when the algorithm is done!
         result.push_back(waypoint);
     }
     return result;
