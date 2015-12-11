@@ -56,6 +56,8 @@ private:
 */
 class LineOrderOptimizer
 {
+    typedef typename std::vector<size_t> Cluster; //To make it more clear what a cluster is.
+
 public:
     /*!
      * \brief The size of the grid cells used to cluster lines.
@@ -110,10 +112,10 @@ private:
      * the previous line. This way you get logical groups of lines that should
      * always be in sequence, with fairly low computational cost.
      * 
-     * \return Indices of polygons, separated in a separate vector for each
-     * group.
+     * \return Clusters of polygons, where each cluster is represented with a
+     * vector of indices pointing to positions in \link polygons.
      */
-    std::vector<std::vector<size_t>> cluster();
+    std::vector<Cluster> cluster();
 
 };
 

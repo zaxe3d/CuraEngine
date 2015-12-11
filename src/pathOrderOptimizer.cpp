@@ -159,7 +159,7 @@ void LineOrderOptimizer::optimize()
     }
     
     //Since polyOrder must be filled with indices, an index in the polygons vector represents each line.
-    std::vector<std::vector<size_t>> line_clusters = cluster();
+    std::vector<Cluster> line_clusters = cluster();
     
     //Define how the TSP solver should use its elements.
     std::function<std::vector<std::pair<Point, Point>>(size_t)> get_orientations = [&](size_t cluster_index) -> std::vector<std::pair<Point, Point>> //How to get the possible orientations of a cluster.
@@ -188,7 +188,7 @@ void LineOrderOptimizer::optimize()
     polyOrder.reserve(polygons.size());
     for(size_t cluster_index = 0;cluster_index < optimised.size();cluster_index++)
     {
-        std::vector<size_t> cluster = line_clusters[optimised[cluster_index]];
+        Cluster cluster = line_clusters[optimised[cluster_index]];
         //Determine in what orientation we should place the cluster depending on cluster_orientations[cluster_index].
         size_t orientation = cluster_orientations[cluster_index];
         if (cluster.size() == 1) //Singleton clusters have only 2 possible orientations.
@@ -236,7 +236,7 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
         grid.insert(polygons[polygon_index].back(),polygon_index);
     }
     
-    std::vector<std::vector<size_t>> clusters;
+    std::vector<Cluster> clusters;
     bool picked[polygons.size()]; //For each polygon, whether it is already in a cluster.
     memset(picked,0,polygons.size()); //Initialise to false.
     for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //Find clusters with nearest neighbour-ish search.
@@ -245,7 +245,7 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
         {
             continue;
         }
-        clusters.push_back(std::vector<size_t>()); //Make a new cluster for this line.
+        clusters.push_back(Cluster()); //Make a new cluster for this line.
         clusters.back().push_back(polygon_index);
         polyStart[polygon_index] = 0; //Choose one possible mirroring of the lines. This determines the start point of each line. The mirror of a cluster is also checked by the TSP solver (but the combination of directions of each individual line is determined here below).
         picked[polygon_index] = true;
