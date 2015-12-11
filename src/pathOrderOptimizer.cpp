@@ -157,6 +157,8 @@ void LineOrderOptimizer::optimize()
     {
         return;
     }
+    
+    //Since polyOrder must be filled with indices, an index in the polygons vector represents each line.
     std::vector<std::vector<size_t>> line_clusters = cluster();
     
     //Define how the TSP solver should use its elements.
