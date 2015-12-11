@@ -247,7 +247,7 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
         }
         clusters.push_back(std::vector<size_t>()); //Make a new cluster for this line.
         clusters.back().push_back(polygon_index);
-        polyStart[polygon_index] = 0; //Decide on a start for the first line. Optimising this would double the processing time, so just pick one.
+        polyStart[polygon_index] = 0; //Choose one possible mirroring of the lines. This determines the start point of each line. The mirror of a cluster is also checked by the TSP solver (but the combination of directions of each individual line is determined here below).
         picked[polygon_index] = true;
         size_t current_polygon = polygon_index; //We'll do a walk to the nearest valid neighbour. A neighbour is valid if it is not picked yet and if both its endpoints are near.
         size_t best_polygon = current_polygon;
