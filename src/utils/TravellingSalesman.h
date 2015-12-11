@@ -171,13 +171,13 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
     {
         return std::vector<E>();
     }
-    
+
     std::vector<Waypoint<E>*> shuffle = fillWaypoints(elements);
     auto rng = std::default_random_engine(0xDECAFF); //Always use a fixed seed! Wouldn't want it to be nondeterministic.
     std::shuffle(shuffle.begin(),shuffle.end(),rng); //"Randomly" shuffles the waypoints.
-    
+
     std::list<Waypoint<E>*> result;
-    
+
     if (!starting_point) //If there is no starting point, just insert the initial element.
     {
         shuffle[0]->best_orientation = 0; //Choose an arbitrary orientation for the first element.
@@ -200,7 +200,8 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
         result . push_back(shuffle[0]);
     }
 
-    for(size_t next_to_insert = 1;next_to_insert < shuffle.size();next_to_insert++) //Now randomly insert the rest of the points.
+    //Now randomly insert the rest of the points.
+    for(size_t next_to_insert = 1;next_to_insert < shuffle.size();next_to_insert++)
     {
         Waypoint<E>* waypoint = shuffle[next_to_insert];
         int64_t best_distance = std :: numeric_limits<int64_t> :: max(); //Change in travel distance to insert the waypoint. Minimise this distance by varying the insertion point and orientation.
@@ -224,7 +225,9 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
                 best_orientation = orientation;
             }
         }
-        for (WaypointListIterator before_insert = result . begin(); before_insert != result . end(); before_insert++) //Try inserting at the other positions.
+
+        //Try inserting at the other positions.
+        for (WaypointListIterator before_insert = result . begin(); before_insert != result . end(); before_insert++)
         {
             WaypointListIterator after_insert = before_insert;
             after_insert++; //Get the element after the current element.
@@ -258,6 +261,7 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
                 }
             }
         }
+
         //Actually insert the waypoint at the best position we found.
         waypoint->best_orientation = best_orientation;
         if (best_insert == result . end()) //We must insert at the very end.
