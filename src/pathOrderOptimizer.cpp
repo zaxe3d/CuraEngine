@@ -159,31 +159,32 @@ void LineOrderOptimizer::optimize()
     }
     std::vector<std::vector<size_t>> line_clusters = cluster();
     
-    TravellingSalesman<size_t> tspsolver([&](size_t cluster_index) -> std :: vector<Point>
+    //Define how the TSP solver should use its elements.
+    std::function<std::vector<Point>(size_t)> get_start_points = [&](size_t cluster_index) -> std::vector<Point> //How to get the possible start points of clusters.
+    {
+        std::vector<Point> result;
+        result.push_back(polygons[line_clusters[cluster_index][0]][polyStart[line_clusters[cluster_index][0]]]); //Not reversed, not mirrored.
+        result.push_back(polygons[line_clusters[cluster_index].back()][(polyStart[line_clusters[cluster_index].back()] - 1) % polygons[line_clusters[cluster_index].back()].size()]); //Reversed, not mirrored.
+        if (line_clusters[cluster_index].size() > 1u) //If the cluster has one line, mirroring the line is equal to reversing the path. Otherwise, we must also include the option of mirrored lines.
         {
-            std :: vector<Point> result;
-            result . push_back(polygons[line_clusters[cluster_index][0]][polyStart[line_clusters[cluster_index][0]]]); //Not reversed, not mirrored.
-            result . push_back(polygons[line_clusters[cluster_index] . back()][(polyStart[line_clusters[cluster_index] . back()] - 1) % polygons[line_clusters[cluster_index] . back()] . size()]); //Reversed, not mirrored.
-            if (line_clusters[cluster_index] . size() > 1u) //If the cluster has one line, mirroring the line is equal to reversing the path. Otherwise, we must also include the option of mirrored lines.
-            {
-                result . push_back(polygons[line_clusters[cluster_index][0]][(polyStart[line_clusters[cluster_index][0]] - 1) % polygons[line_clusters[cluster_index][0]] . size()]); //Not reversed, mirrored.
-                result . push_back(polygons[line_clusters[cluster_index] . back()][polyStart[line_clusters[cluster_index] . back()]]); //Reversed, mirrored.
-            }
-            return result;
+            result.push_back(polygons[line_clusters[cluster_index][0]][(polyStart[line_clusters[cluster_index][0]] - 1) % polygons[line_clusters[cluster_index][0]].size()]); //Not reversed, mirrored.
+            result.push_back(polygons[line_clusters[cluster_index].back()][polyStart[line_clusters[cluster_index].back()]]); //Reversed, mirrored.
         }
-        ,[&](size_t cluster_index) -> std :: vector<Point>
+        return result;
+    };
+    std::function<std::vector<Point>(size_t)> get_end_points = [&](size_t cluster_index) -> std::vector<Point> //How to get the possible end points of clusters.
+    {
+        std::vector<Point> result;
+        result.push_back(polygons[line_clusters[cluster_index].back()][(polyStart[line_clusters[cluster_index].back()] - 1) % polygons[line_clusters[cluster_index].back()].size()]); //Not reversed, not mirrored.
+        result.push_back(polygons[line_clusters[cluster_index][0]][polyStart[line_clusters[cluster_index][0]]]); //Reversed, not mirrored.
+        if (line_clusters[cluster_index].size() > 1u) //The mirrored cases.
         {
-            std :: vector<Point> result;
-            result . push_back(polygons[line_clusters[cluster_index] . back()][(polyStart[line_clusters[cluster_index] . back()] - 1) % polygons[line_clusters[cluster_index] . back()] . size()]); //Not reversed, not mirrored.
-            result . push_back(polygons[line_clusters[cluster_index][0]][polyStart[line_clusters[cluster_index][0]]]); //Reversed, not mirrored.
-            if (line_clusters[cluster_index] . size() > 1u) //The mirrored cases.
-            {
-                result . push_back(polygons[line_clusters[cluster_index] . back()][polyStart[line_clusters[cluster_index] . back()]]); //Not reversed, mirrored.
-                result . push_back(polygons[line_clusters[cluster_index][0]][(polyStart[line_clusters[cluster_index][0]] - 1) % polygons[line_clusters[cluster_index][0]] . size()]); //Reversed, mirrored.
-            }
-            return result;
+            result.push_back(polygons[line_clusters[cluster_index].back()][polyStart[line_clusters[cluster_index].back()]]); //Not reversed, mirrored.
+            result.push_back(polygons[line_clusters[cluster_index][0]][(polyStart[line_clusters[cluster_index][0]] - 1) % polygons[line_clusters[cluster_index][0]].size()]); //Reversed, mirrored.
         }
-    ); //Solves the macro TSP problem of ordering the clusters.
+        return result;
+    };
+    TravellingSalesman<size_t> tspsolver(get_start_points, get_end_points); //Solves the macro TSP problem of ordering the clusters.
     std :: vector<size_t> cluster_orientations;
     std::vector<size_t> unoptimised(line_clusters.size());
     std::iota(unoptimised.begin(),unoptimised.end(),0);
