@@ -19,6 +19,10 @@ namespace cura
  * 
  * It needs to know the actual element in the path, but also where the element's
  * own path starts and ends.
+ * 
+ * \tparam E The type of element data stored in this waypoint. Note that these
+ * are copied into the waypoint on construction and out of the waypoint right
+ * before deletion.
  */
 template<class E> struct Waypoint
 {
@@ -71,6 +75,11 @@ template<class E> struct Waypoint
  * 
  * Various variants can be implemented here, such as the shortest path past a
  * set of points or of lines.
+ * 
+ * \tparam E The type of elements that must be ordered by this instance of
+ * <em>TravellingSalesman</em>. Note that each element is copied twice in a run
+ * of \link findPath, so if this type is difficult to copy, provide pointers to
+ * the elements instead.
  */
 template<class E> class TravellingSalesman
 {
