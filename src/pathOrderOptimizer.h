@@ -103,6 +103,13 @@ private:
      * \brief Clusters the polygons in groups such that the start and end of the
      * polygons in each group are close together.
      * 
+     * This performs a simple nearest-neighbour traversal through all lines. An
+     * arbitrary line is chosen as starting point for a cluster, and iteratively
+     * the nearest neighbouring line will get added to that cluster. A line is
+     * only neighbouring if both of its endpoints are nearby the endpoints of
+     * the previous line. This way you get logical groups of lines that should
+     * always be in sequence, with fairly low computational cost.
+     * 
      * \return Indices of polygons, separated in a separate vector for each
      * group.
      */
