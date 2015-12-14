@@ -153,7 +153,7 @@ LineOrderOptimizer::LineOrderOptimizer(const Point& start_point, unsigned long l
 */
 void LineOrderOptimizer::optimize()
 {
-    if(polygons.empty()) //Nothing to do. Terminate early.
+    if (lines.empty()) //Nothing to do. Terminate early.
     {
         return;
     }
@@ -165,14 +165,14 @@ void LineOrderOptimizer::optimize()
     std::function<std::vector<std::pair<Point, Point>>(size_t)> get_orientations = [&](size_t cluster_index) -> std::vector<std::pair<Point, Point>> //How to get the possible orientations of a cluster.
     {
         std::vector<std::pair<Point, Point>> result;
-        Point start_normal = polygons[line_clusters[cluster_index][0]][polyStart[line_clusters[cluster_index][0]]]; //Start of the path, not mirrored.
-        Point end_normal = polygons[line_clusters[cluster_index].back()][(polyStart[line_clusters[cluster_index].back()] - 1) % polygons[line_clusters[cluster_index].back()].size()]; //End of the path, not mirrored.
+        Point start_normal = lines[line_clusters[cluster_index][0]][polyStart[line_clusters[cluster_index][0]]]; //Start of the path, not mirrored.
+        Point end_normal = lines[line_clusters[cluster_index].back()][(polyStart[line_clusters[cluster_index].back()] - 1) % lines[line_clusters[cluster_index].back()].size()]; //End of the path, not mirrored.
         result.push_back(std::pair<Point, Point>(start_normal, end_normal));
         result.push_back(std::pair<Point, Point>(end_normal, start_normal)); //Can also insert in reverse!
         if (line_clusters[cluster_index].size() > 1u) //If the cluster has one line, mirroring the line is equal to reversing the path. Otherwise, we must also include mirrored options.
         {
-            Point start_mirrored = polygons[line_clusters[cluster_index][0]][(polyStart[line_clusters[cluster_index][0]] - 1) % polygons[line_clusters[cluster_index].back()].size()]; //Start of the path, mirrored.
-            Point end_mirrored = polygons[line_clusters[cluster_index][0]][(polyStart[line_clusters[cluster_index][0]] - 1) % polygons[line_clusters[cluster_index].back()].size()]; //End of the path, mirrored.
+            Point start_mirrored = lines[line_clusters[cluster_index][0]][(polyStart[line_clusters[cluster_index][0]] - 1) % lines[line_clusters[cluster_index].back()].size()]; //Start of the path, mirrored.
+            Point end_mirrored = lines[line_clusters[cluster_index][0]][(polyStart[line_clusters[cluster_index][0]] - 1) % lines[line_clusters[cluster_index].back()].size()]; //End of the path, mirrored.
             result.push_back(std::pair<Point, Point>(start_mirrored, end_mirrored));
             result.push_back(std::pair<Point, Point>(end_mirrored, start_mirrored));
         }
@@ -185,7 +185,7 @@ void LineOrderOptimizer::optimize()
     std :: vector<size_t> optimised = tspsolver.findPath(unoptimised, cluster_orientations, &startPoint); //Approximate the shortest path with the TSP solver.
     
     //Actually put the paths in their correct order for the output.
-    polyOrder.reserve(polygons.size());
+    polyOrder.reserve(lines.size());
     for(size_t cluster_index = 0;cluster_index < optimised.size();cluster_index++)
     {
         Cluster cluster = line_clusters[optimised[cluster_index]];
@@ -228,18 +228,18 @@ void LineOrderOptimizer::optimize()
 
 std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
 {
-    polyStart.resize(polygons.size()); //Polystart should always contain an entry for all polygons.
+    polyStart.resize(lines.size()); //Polystart should always contain an entry for all polygons.
     BucketGrid2D<size_t> grid(cluster_grid_size);
-    for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //First put every endpoint of all lines in the grid.
+    for (size_t polygon_index = 0; polygon_index < lines.size(); polygon_index++) //First put every endpoint of all lines in the grid.
     {
-        grid.insert(polygons[polygon_index][0],polygon_index);
-        grid.insert(polygons[polygon_index].back(),polygon_index);
+        grid.insert(lines[polygon_index][0], polygon_index);
+        grid.insert(lines[polygon_index].back(), polygon_index);
     }
     
     std::vector<Cluster> clusters;
-    bool picked[polygons.size()]; //For each polygon, whether it is already in a cluster.
-    memset(picked,0,polygons.size()); //Initialise to false.
-    for(size_t polygon_index = 0;polygon_index < polygons.size();polygon_index++) //Find clusters with nearest neighbour-ish search.
+    bool picked[lines.size()]; //For each polygon, whether it is already in a cluster.
+    memset(picked, 0, lines.size()); //Initialise to false.
+    for (size_t polygon_index = 0; polygon_index < lines.size(); polygon_index++) //Find clusters with nearest neighbour-ish search.
     {
         if(picked[polygon_index]) //Already in a cluster.
         {
@@ -253,28 +253,28 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
         size_t best_polygon = current_polygon;
         while(best_polygon != static_cast<size_t>(-1)) //Keep going until there is no valid neighbour.
         {
-            Point current_start = polygons[current_polygon][polyStart[current_polygon]]; //Start and end point of the current polygon. These are used to find the distance to the next polygon.
-            Point current_end = polygons[current_polygon][(polyStart[current_polygon] - 1) % polygons[current_polygon].size()];
+            Point current_start = lines[current_polygon][polyStart[current_polygon]]; //Start and end point of the current polygon. These are used to find the distance to the next polygon.
+            Point current_end = lines[current_polygon][(polyStart[current_polygon] - 1) % lines[current_polygon].size()];
             best_polygon = static_cast<size_t>(-1);
             unsigned long long best_distance = cluster_grid_size * cluster_grid_size + 1; //grid_size squared since vSize2 gives squared distance.
             size_t best_start;
-            for(size_t neighbour : grid.findNearbyObjects(polygons[current_polygon][0]))
+            for (size_t neighbour : grid.findNearbyObjects(lines[current_polygon][0]))
             {
                 if(picked[neighbour]) //Don't use neighbours that are already in another cluster.
                 {
                     continue;
                 }
-                unsigned long long distance_start_start = vSize2(current_start - polygons[neighbour][0]);
-                unsigned long long distance_start_end = vSize2(current_start - polygons[neighbour].back());
-                unsigned long long distance_end_start = vSize2(current_end - polygons[neighbour][0]);
-                unsigned long long distance_end_end = vSize2(current_end - polygons[neighbour].back());
+                unsigned long long distance_start_start = vSize2(current_start - lines[neighbour][0]);
+                unsigned long long distance_start_end = vSize2(current_start - lines[neighbour].back());
+                unsigned long long distance_end_start = vSize2(current_end - lines[neighbour][0]);
+                unsigned long long distance_end_end = vSize2(current_end - lines[neighbour].back());
                 if (distance_start_start < cluster_grid_size * cluster_grid_size && distance_end_end < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other.
                 {
                     if (distance_end_end < best_distance) //Best neighbour and orientation so far.
                     {
                         best_polygon = neighbour;
                         best_distance = distance_end_end;
-                        best_start = polygons[neighbour].size() - 1;
+                        best_start = lines[neighbour].size() - 1;
                     }
                 }
                 if (distance_start_end < cluster_grid_size * cluster_grid_size && distance_end_start < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other, but in reverse direction.
