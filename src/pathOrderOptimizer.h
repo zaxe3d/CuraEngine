@@ -69,7 +69,7 @@ public:
     const unsigned long long cluster_grid_size;
     
     Point startPoint; //!< The location of the nozzle before starting to print the current layer
-    std::vector<PolygonRef> polygons; //!< the parts of the layer (in arbitrary order)
+    std::vector<PolygonRef> lines; //!< the parts of the layer (in arbitrary order)
     std::vector<int> polyStart; //!< polygons[i][polyStart[i]] = point of polygon i which is to be the starting point in printing the polygon
     std::vector<int> polyOrder; //!< the optimized order as indices in #polygons
 
@@ -87,13 +87,13 @@ public:
 
     void addPolygon(PolygonRef polygon)
     {
-        this->polygons.push_back(polygon);
+        this->lines.push_back(polygon);
     }
 
     void addPolygons(Polygons& polygons)
     {
         for(unsigned int i=0;i<polygons.size(); i++)
-            this->polygons.push_back(polygons[i]);
+            this->lines.push_back(polygons[i]);
     }
 
     void optimize(); //!< sets #polyStart and #polyOrder
