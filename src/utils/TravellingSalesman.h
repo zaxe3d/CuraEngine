@@ -108,19 +108,13 @@ public:
      * The approximation will try to insert random elements at the best location
      * in the current path, thereby incrementally constructing a good path. Each
      * element can be inserted in multiple possible orientations, defined by the
-     * <em>get_start</em> and <em>get_end</em>
-     * This version of the Travelling Salesman approximation will also try to
-     * reverse the start and end point of the elements. This will involve
-     * roughly twice as much computation time as when the same elements are fed
-     * to findPathNoReverse(std::vector<Element>,Point*). It may be useful for
-     * when the elements may be traversed in reverse direction and this may
-     * influence the total path length, such as extruding a number of lines.
+     * <em>get_orientations</em> function.
      * 
      * \param elements The elements past which the path must run.
-     * \param reversed_elements Output parameter to indicate for each element in
-     * which orientation it must be placed to minimise the travel time. The
+     * \param element_orientations Output parameter to indicate for each element
+     * in which orientation it must be placed to minimise the travel time. The
      * resulting integers correspond to the index of the options given by the
-     * <em>get_start</em> and <em>get_end</em> constructor parameters.
+     * <em>get_orientations</em> constructor parameter.
      * \param starting_point A fixed starting point of the path, if any. If this
      * is <em>nullptr</em>, the path may start at the start or end point of any
      * element, depending on which the heuristic deems shortest.
