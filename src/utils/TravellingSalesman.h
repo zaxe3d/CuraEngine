@@ -271,7 +271,7 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
     //Now that we've inserted all points, linearise them into one vector.
     std::vector<E> result_vector;
     result_vector.reserve(elements.size());
-    element_orientations . clear(); //Prepare the reversed_elements vector for storing whether elements should be reversed.
+    element_orientations . clear(); //Prepare the element_orientations vector for storing in which orientation each element should be placed.
     element_orientations . reserve(elements . size());
     for(Waypoint<E>* waypoint : result)
     {
