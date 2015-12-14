@@ -92,8 +92,10 @@ public:
 
     void addPolygons(Polygons& polygons)
     {
-        for(unsigned int i=0;i<polygons.size(); i++)
+        for(unsigned int i = 0; i < polygons.size(); i++)
+        {
             this->lines.push_back(polygons[i]);
+        }
     }
 
     void optimize(); //!< sets #polyStart and #polyOrder
