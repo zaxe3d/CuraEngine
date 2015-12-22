@@ -146,6 +146,78 @@ private:
      * \return A vector of waypoints with the specified elements in them.
      */
     std::vector<Waypoint<E>*> fillWaypoints(std::vector<E> elements);
+
+    /*!
+     * \brief Tries to insert a waypoint at the first position in the list.
+     *
+     * It will try to insert the waypoint at all possible orientations. If it
+     * finds an orientation with an insertion distance that is less than the
+     * best distance, it will update the \p best_distance, \p best_orientation
+     * and \p best_insert variables with the parameters of this insertion.
+     *
+     * TODO: Decide if we shouldn't better just inline this function.
+     *
+     * \param waypoint The waypoint to insert in the list.
+     * \param starting_point The starting point to insert the waypoint after, if
+     * any.
+     * \param first_element The first element of the list to insert the waypoint
+     * before.
+     * \param best_distance The current best distance of inserting the waypoint.
+     * This parameter is changed if a better insertion is found.
+     * \param best_orientation The current best orientation of inserting the
+     * waypoint. This parameter is changed if a better insertion is found.
+     * \param best_insert The current best place to insert the waypoint. This
+     * parameter is changed if a better insertion is found.
+     */
+    inline void tryInsertFirst(Waypoint<E>* waypoint, Point* starting_point, WaypointListIterator first_element, int64_t* best_distance, size_t* best_orientation, WaypointListIterator* best_insert);
+
+    /*!
+     * \brief Tries to insert a waypoint at the last position in the list.
+     *
+     * It will try to insert the waypoint at all possible orientations. If it
+     * finds an orientation with an insertion distance that is less than the
+     * best distance, it will update the \p best_distance, \p best_orientation
+     * and \p best_insert variables with the parameters of this insertion.
+     *
+     * TODO: Decide if we shouldn't better just inline this function.
+     *
+     * \param waypoint The waypoint to insert in the list.
+     * \param last_element The last element of the list to insert the waypoint
+     * after.
+     * \param The WaypointListIterator to use to indicate that it should insert
+     * the new waypoint after the last element of the list, if it should find
+     * that as a new best position.
+     * \param best_distance The current best distance of inserting the waypoint.
+     * This parameter is changed if a better insertion is found.
+     * \param best_orientation The current best orientation of inserting the
+     * waypoint. This parameter is changed if a better insertion is found.
+     * \param best_insert The current best place to insert the waypoint. This
+     * parameter is changed if a better insertion is found.
+     */
+    inline void tryInsertLast(Waypoint<E>* waypoint, WaypointListIterator last_element, WaypointListIterator after_insert, int64_t* best_distance, size_t* best_orientation, WaypointListIterator* best_insert);
+
+    /*!
+     * \brief Tries to insert a waypoint at a position in the centre of the
+     * list.
+     *
+     * It will try to insert the waypoint at all possible orientations. If it
+     * finds an orientation with an insertion distance that is less than the
+     * best distance, it will update the \p best_distance, \p best_orientation
+     * and \p best_insert variables with the parameters of this insertion.
+     *
+     * TODO: Decide if we shouldn't better just inline this function.
+     *
+     * \param waypoint The waypoint to insert in the list.
+     * \param before_insert The element after which to insert the new waypoint.
+     * \param after_insert The element before which to insert the new waypoint.
+     * \param best_distance The current best distance of inserting the waypoint.
+     * This parameter is changed if a better insertion is found.
+     * \param best_orientation The current best orientation of inserting the
+     * waypoint. This parameter is changed if a better insertion is found.
+     * \param best_insert The current best place to insert the waypoint. This
+     * parameter is changed if a better insertion is found.
+     */
+    inline void tryInsertMiddle(Waypoint<E>* waypoint, WaypointListIterator before_insert, WaypointListIterator after_insert, int64_t* best_distance, size_t* best_orientation, WaypointListIterator* best_insert);
 };
 
 ////BELOW FOLLOWS THE IMPLEMENTATION.////
@@ -203,22 +275,7 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
         size_t best_orientation; //In what orientation to insert the element.
         
         //First try inserting before the first element.
-        for (size_t orientation = 0; orientation < waypoint->orientations.size(); orientation++)
-        {
-            int64_t before_distance = 0;
-            if (starting_point) //If there is a starting point, we're inserting between the first point and the starting point.
-            {
-                before_distance = vSize(*starting_point - waypoint->orientations[orientation].first);
-            }
-            int64_t after_distance = vSize(waypoint->orientations[orientation].second - (*result.begin()) -> orientations[(*result.begin())->best_orientation].first); //From the end of this element to the start of the first element.
-            int64_t distance = before_distance + after_distance;
-            if (distance < best_distance)
-            {
-                best_distance = distance;
-                best_insert = result . begin();
-                best_orientation = orientation;
-            }
-        }
+        tryInsertFirst(waypoint, starting_point, result.begin(), &best_distance, &best_orientation, &best_insert);
 
         //Try inserting at the other positions.
         for (WaypointListIterator before_insert = result . begin(); before_insert != result . end(); before_insert++)
@@ -227,32 +284,11 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
             after_insert++; //Get the element after the current element.
             if(after_insert == result.end()) //There is no next element. We're inserting at the end of the path.
             {
-                for (size_t orientation = 0; orientation < waypoint->orientations.size(); orientation++)
-                {
-                    int64_t distance = vSize((*before_insert)->orientations[(*before_insert)->best_orientation].second - waypoint->orientations[orientation].first); //From the end of the last element to the start of this element.
-                    if (distance < best_distance)
-                    {
-                        best_distance = distance;
-                        best_insert = after_insert;
-                        best_orientation = orientation;
-                    }
-                }
+                tryInsertLast(waypoint, before_insert, after_insert, &best_distance, &best_orientation, &best_insert);
             }
             else //There is a next element. We're inserting somewhere in the middle.
             {
-                for (size_t orientation = 0; orientation < waypoint->orientations.size(); orientation++)
-                {
-                    int64_t removed_distance = vSize((*before_insert)->orientations[(*before_insert)->best_orientation].second - (*after_insert)->orientations[(*after_insert)->best_orientation].first); //Distance of the original move that we'll remove.
-                    int64_t before_distance = vSize((*before_insert)->orientations[(*before_insert)->best_orientation].second - waypoint->orientations[orientation].first); //From end of previous element to start of this element.
-                    int64_t after_distance = vSize(waypoint->orientations[orientation].second - (*after_insert)->orientations[(*after_insert)->best_orientation].first); //From end of this element to start of next element.
-                    int64_t distance = before_distance + after_distance - removed_distance;
-                    if (distance < best_distance)
-                    {
-                        best_distance = distance;
-                        best_insert = after_insert;
-                        best_orientation = orientation;
-                    }
-                }
+                tryInsertMiddle(waypoint, before_insert, after_insert, &best_distance, &best_orientation, &best_insert);
             }
         }
 
@@ -293,6 +329,72 @@ template<class E> std::vector<Waypoint<E>*> TravellingSalesman<E>::fillWaypoints
         result.push_back(waypoint);
     }
     return result;
+}
+
+template<class E> inline void TravellingSalesman<E>::tryInsertFirst(Waypoint<E>* waypoint, Point* starting_point, WaypointListIterator first_element, int64_t* best_distance, size_t* best_orientation, WaypointListIterator* best_insert)
+{
+    if (!waypoint or !best_distance or !best_orientation or !best_insert) //Input checking.
+    {
+        return;
+    }
+
+    for (size_t orientation = 0; orientation < waypoint->orientations.size(); orientation++)
+    {
+        int64_t before_distance = 0;
+        if (starting_point) //If there is a starting point, we're inserting between the first point and the starting point.
+        {
+            before_distance = vSize(*starting_point - waypoint->orientations[orientation].first);
+        }
+        int64_t after_distance = vSize(waypoint->orientations[orientation].second - (*first_element)->orientations[(*first_element)->best_orientation].first); //From the end of this element to the start of the first element.
+        int64_t distance = before_distance + after_distance;
+        if (distance < *best_distance)
+        {
+            *best_distance = distance;
+            *best_insert = first_element;
+            *best_orientation = orientation;
+        }
+    }
+}
+
+template<class E> inline void TravellingSalesman<E>::tryInsertLast(Waypoint<E>* waypoint, WaypointListIterator last_element, WaypointListIterator after_insert, int64_t* best_distance, size_t* best_orientation, WaypointListIterator* best_insert)
+{
+    if (!waypoint or !best_distance or !best_orientation or !best_insert) //Input checking.
+    {
+        return;
+    }
+
+    for (size_t orientation = 0; orientation < waypoint->orientations.size(); orientation++)
+    {
+        int64_t distance = vSize((*last_element)->orientations[(*last_element)->best_orientation].second - waypoint->orientations[orientation].first); //From the end of the last element to the start of this element.
+        if (distance < *best_distance)
+        {
+            *best_distance = distance;
+            *best_insert = after_insert;
+            *best_orientation = orientation;
+        }
+    }
+}
+
+template<class E> inline void TravellingSalesman<E>::tryInsertMiddle(Waypoint<E>* waypoint, WaypointListIterator before_insert, WaypointListIterator after_insert, int64_t* best_distance, size_t* best_orientation, WaypointListIterator* best_insert)
+{
+    if (!waypoint or !best_distance or !best_orientation or !best_insert) //Input checking.
+    {
+        return;
+    }
+    
+    for (size_t orientation = 0; orientation < waypoint->orientations.size(); orientation++)
+    {
+        int64_t removed_distance = vSize((*before_insert)->orientations[(*before_insert)->best_orientation].second - (*after_insert)->orientations[(*after_insert)->best_orientation].first); //Distance of the original move that we'll remove.
+        int64_t before_distance = vSize((*before_insert)->orientations[(*before_insert)->best_orientation].second - waypoint->orientations[orientation].first); //From end of previous element to start of this element.
+        int64_t after_distance = vSize(waypoint->orientations[orientation].second - (*after_insert)->orientations[(*after_insert)->best_orientation].first); //From end of this element to start of next element.
+        int64_t distance = before_distance + after_distance - removed_distance;
+        if (distance < *best_distance)
+        {
+            *best_distance = distance;
+            *best_insert = after_insert;
+            *best_orientation = orientation;
+        }
+    }
 }
 
 }
