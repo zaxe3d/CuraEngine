@@ -264,26 +264,29 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
                 {
                     continue;
                 }
-                unsigned long long distance_start_start = vSize2(current_start - lines[neighbour][0]);
-                unsigned long long distance_start_end = vSize2(current_start - lines[neighbour].back());
-                unsigned long long distance_end_start = vSize2(current_end - lines[neighbour][0]);
-                unsigned long long distance_end_end = vSize2(current_end - lines[neighbour].back());
-                if (distance_start_start < cluster_grid_size * cluster_grid_size && distance_end_end < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other.
+                if (isNear(current_polygon, neighbour)) //TODO: This check is superfluous since the same check has to be made below in order to decide on the direction.
                 {
-                    if (distance_end_end < best_distance) //Best neighbour and orientation so far.
+                    unsigned long long distance_start_start = vSize2(current_start - lines[neighbour][0]);
+                    unsigned long long distance_start_end = vSize2(current_start - lines[neighbour].back());
+                    unsigned long long distance_end_start = vSize2(current_end - lines[neighbour][0]);
+                    unsigned long long distance_end_end = vSize2(current_end - lines[neighbour].back());
+                    if (distance_start_start < cluster_grid_size * cluster_grid_size && distance_end_end < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other.
                     {
-                        best_polygon = neighbour;
-                        best_distance = distance_end_end;
-                        best_start = lines[neighbour].size() - 1;
+                        if (distance_end_end < best_distance) //Best neighbour and orientation so far.
+                        {
+                            best_polygon = neighbour;
+                            best_distance = distance_end_end;
+                            best_start = lines[neighbour].size() - 1;
+                        }
                     }
-                }
-                if (distance_start_end < cluster_grid_size * cluster_grid_size && distance_end_start < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other, but in reverse direction.
-                {
-                    if (distance_end_start < best_distance)
+                    if (distance_start_end < cluster_grid_size * cluster_grid_size && distance_end_start < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other, but in reverse direction.
                     {
-                        best_polygon = neighbour;
-                        best_distance = distance_end_start;
-                        best_start = 0;
+                        if (distance_end_start < best_distance)
+                        {
+                            best_polygon = neighbour;
+                            best_distance = distance_end_start;
+                            best_start = 0;
+                        }
                     }
                 }
             }
@@ -297,6 +300,20 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
         }
     }
     return clusters;
+}
+
+bool LineOrderOptimizer::isNear(size_t line1, size_t line2)
+{
+    Point start1 = lines[line1][polyStart[line1]]; //Start and end point of line1.
+    Point end1 = lines[line1][(polyStart[line1] - 1) % lines[line1].size()];
+    Point start2 = lines[line2][0]; //Start and end point of line2. For these, the direction is not yet decided at this point.
+    Point end2 = lines[line2].back();
+    unsigned long long distance_start_start = vSize2(start1 - start2);
+    unsigned long long distance_start_end = vSize2(start1 - end2);
+    unsigned long long distance_end_start = vSize2(end1 - start2);
+    unsigned long long distance_end_end = vSize2(end1 - end2);
+    return (distance_start_start < cluster_grid_size * cluster_grid_size && distance_end_end < cluster_grid_size * cluster_grid_size)
+        || (distance_start_end < cluster_grid_size * cluster_grid_size && distance_end_start < cluster_grid_size * cluster_grid_size);
 }
 
 }//namespace cura

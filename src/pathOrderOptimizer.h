@@ -117,6 +117,23 @@ private:
      */
     std::vector<Cluster> cluster();
 
+    /*!
+     * \brief Check if two lines are near to each other.
+     * 
+     * If they are near, they should be placed in the same cluster.
+     * Two lines are near if and only if both endpoints are close to each other.
+     * If there is infill, they need to be at least as close as the line spacing
+     * of the infill. If there is no infill, a default distance is used.
+     * 
+     * TODO: This check has currently no effect on the algorithm except that it
+     * increases running time.
+     * 
+     * \param line1 The line to check whether it is close to \p line2.
+     * \param line2 The line to check whether it is close to \p line1.
+     * \return <em>true</em> if the lines are close to each other, or
+     * <em>false</em> otherwise.
+     */
+    bool isNear(size_t line1, size_t line2);
 };
 
 }//namespace cura
