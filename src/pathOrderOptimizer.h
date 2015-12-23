@@ -101,8 +101,6 @@ public:
     void optimize(); //!< sets #polyStart and #polyOrder
 
 private:
-    void checkIfLineIsBest(unsigned int i_line_polygon, int& best, float& bestDist, Point& prev_point, Point& incommingPerpundicularNormal);
-    
     /*!
      * \brief Clusters the polygons in groups such that the start and end of the
      * polygons in each group are close together.
