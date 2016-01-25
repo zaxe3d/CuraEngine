@@ -155,8 +155,6 @@ private:
      * best distance, it will update the \p best_distance, \p best_orientation
      * and \p best_insert variables with the parameters of this insertion.
      *
-     * TODO: Decide if we shouldn't better just inline this function.
-     *
      * \param waypoint The waypoint to insert in the list.
      * \param starting_point The starting point to insert the waypoint after, if
      * any.
@@ -178,8 +176,6 @@ private:
      * finds an orientation with an insertion distance that is less than the
      * best distance, it will update the \p best_distance, \p best_orientation
      * and \p best_insert variables with the parameters of this insertion.
-     *
-     * TODO: Decide if we shouldn't better just inline this function.
      *
      * \param waypoint The waypoint to insert in the list.
      * \param last_element The last element of the list to insert the waypoint
@@ -204,8 +200,6 @@ private:
      * finds an orientation with an insertion distance that is less than the
      * best distance, it will update the \p best_distance, \p best_orientation
      * and \p best_insert variables with the parameters of this insertion.
-     *
-     * TODO: Decide if we shouldn't better just inline this function.
      *
      * \param waypoint The waypoint to insert in the list.
      * \param before_insert The element after which to insert the new waypoint.
