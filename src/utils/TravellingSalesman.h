@@ -36,7 +36,7 @@ template<class E> struct Waypoint
     Waypoint(std::vector<std::pair<Point, Point>> orientations, E element) : orientations(orientations), element(element)
     {
     }
-    
+
     /*!
      * \brief The possible orientations in which the waypoint could be placed in
      * the path.
@@ -47,12 +47,12 @@ template<class E> struct Waypoint
      * waypoint into the path.
      */
     std::vector<std::pair<Point, Point>> orientations;
-    
+
     /*!
      * \brief The actual element this waypoint holds.
      */
     E element;
-    
+
     /*!
      * \brief The optimal orientation of this waypoint in the final path.
      * 
@@ -76,7 +76,7 @@ template<class E> struct Waypoint
  */
 template<class E> class TravellingSalesman
 {
-    typedef typename std :: list<Waypoint<E>*> :: iterator WaypointListIterator; //To help the compiler with templates in templates.
+    typedef typename std::list<Waypoint<E>*>::iterator WaypointListIterator; //To help the compiler with templates in templates.
 
 public:
     /*!
@@ -91,12 +91,12 @@ public:
     {
         //Do nothing. All parameters are already copied to fields.
     }
-    
+
     /*!
      * \brief Destroys the instance, releasing all memory used by it.
      */
     virtual ~TravellingSalesman();
-    
+
     /*!
      * \brief Computes a short path along all specified elements.
      * 
@@ -120,8 +120,8 @@ public:
      * element, depending on which the heuristic deems shortest.
      * \return A vector of elements, in an order that would make a short path.
      */
-    std :: vector<E> findPath(std :: vector<E> elements, std :: vector<size_t>& element_orientations, Point* starting_point = nullptr);
-    
+    std::vector<E> findPath(std::vector<E> elements, std::vector<size_t>& element_orientations, Point* starting_point = nullptr);
+
 protected:
     /*!
      * \brief Function to use to get the possible orientations of an element.
@@ -129,7 +129,7 @@ protected:
      * Each orientation has a start point and an end point, in that order.
      */
     std::function<std::vector<std::pair<Point, Point>>(E)> get_orientations;
-    
+
 private:
     /*!
      * \brief Puts all elements in waypoints, caching their endpoints.
@@ -227,31 +227,31 @@ template<class E> TravellingSalesman<E>::~TravellingSalesman()
     //Do nothing.
 }
 
-template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vector<E> elements, std :: vector<size_t>& element_orientations, Point* starting_point)
+template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> elements, std::vector<size_t>& element_orientations, Point* starting_point)
 {
     /* This approximation algorithm of TSP implements the random insertion
      * heuristic. Random insertion has in tests proven to be almost as good as
      * Christofides (111% of the optimal path length rather than 110% on random
      * graphs) but is much faster to compute. */
-    if(elements.empty())
+    if (elements.empty())
     {
         return std::vector<E>();
     }
 
     std::vector<Waypoint<E>*> shuffle = fillWaypoints(elements);
     auto rng = std::default_random_engine(0xDECAFF); //Always use a fixed seed! Wouldn't want it to be nondeterministic.
-    std::shuffle(shuffle.begin(),shuffle.end(),rng); //"Randomly" shuffles the waypoints.
+    std::shuffle(shuffle.begin(), shuffle.end(), rng); //"Randomly" shuffles the waypoints.
 
     std::list<Waypoint<E>*> result;
 
     if (!starting_point) //If there is no starting point, just insert the initial element.
     {
         shuffle[0]->best_orientation = 0; //Choose an arbitrary orientation for the first element.
-        result . push_back(shuffle[0]); //Due to the check at the start, we know that shuffled always contains at least 1 element.
+        result.push_back(shuffle[0]); //Due to the check at the start, we know that shuffled always contains at least 1 element.
     }
     else //If there is a starting point, insert the initial element after it.
     {
-        int64_t best_distance = std :: numeric_limits<int64_t> :: max(); //Change in travel distance to insert the waypoint. Minimise this distance by varying the orientation.
+        int64_t best_distance = std::numeric_limits<int64_t>::max(); //Change in travel distance to insert the waypoint. Minimise this distance by varying the orientation.
         size_t best_orientation; //In what orientation to insert the element.
         for (size_t orientation = 0; orientation < shuffle[0]->orientations.size(); orientation++)
         {
@@ -263,26 +263,26 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
             }
         }
         shuffle[0]->best_orientation = best_orientation;
-        result . push_back(shuffle[0]);
+        result.push_back(shuffle[0]);
     }
 
     //Now randomly insert the rest of the points.
-    for(size_t next_to_insert = 1;next_to_insert < shuffle.size();next_to_insert++)
+    for (size_t next_to_insert = 1; next_to_insert < shuffle.size(); next_to_insert++)
     {
         Waypoint<E>* waypoint = shuffle[next_to_insert];
-        int64_t best_distance = std :: numeric_limits<int64_t> :: max(); //Change in travel distance to insert the waypoint. Minimise this distance by varying the insertion point and orientation.
+        int64_t best_distance = std::numeric_limits<int64_t>::max(); //Change in travel distance to insert the waypoint. Minimise this distance by varying the insertion point and orientation.
         WaypointListIterator best_insert; //Where to insert the element. It will be inserted before this element. If it's nullptr, insert at the very front.
         size_t best_orientation; //In what orientation to insert the element.
-        
+
         //First try inserting before the first element.
         tryInsertFirst(waypoint, starting_point, result.begin(), &best_distance, &best_orientation, &best_insert);
 
         //Try inserting at the other positions.
-        for (WaypointListIterator before_insert = result . begin(); before_insert != result . end(); before_insert++)
+        for (WaypointListIterator before_insert = result.begin(); before_insert != result.end(); before_insert++)
         {
             WaypointListIterator after_insert = before_insert;
             after_insert++; //Get the element after the current element.
-            if(after_insert == result.end()) //There is no next element. We're inserting at the end of the path.
+            if (after_insert == result.end()) //There is no next element. We're inserting at the end of the path.
             {
                 tryInsertLast(waypoint, before_insert, after_insert, &best_distance, &best_orientation, &best_insert);
             }
@@ -294,22 +294,22 @@ template<class E> std :: vector<E> TravellingSalesman<E> :: findPath(std :: vect
 
         //Actually insert the waypoint at the best position we found.
         waypoint->best_orientation = best_orientation;
-        if (best_insert == result . end()) //We must insert at the very end.
+        if (best_insert == result.end()) //We must insert at the very end.
         {
-            result . push_back(waypoint);
+            result.push_back(waypoint);
         }
         else //We must insert before best_insert.
         {
-            result . insert(best_insert, waypoint);
+            result.insert(best_insert, waypoint);
         }
     }
 
     //Now that we've inserted all points, linearise them into one vector.
     std::vector<E> result_vector;
     result_vector.reserve(elements.size());
-    element_orientations . clear(); //Prepare the element_orientations vector for storing in which orientation each element should be placed.
-    element_orientations . reserve(elements . size());
-    for(Waypoint<E>* waypoint : result)
+    element_orientations.clear(); //Prepare the element_orientations vector for storing in which orientation each element should be placed.
+    element_orientations.reserve(elements.size());
+    for (Waypoint<E>* waypoint : result)
     {
         result_vector.push_back(waypoint->element);
         element_orientations.push_back(waypoint->best_orientation);
@@ -322,8 +322,8 @@ template<class E> std::vector<Waypoint<E>*> TravellingSalesman<E>::fillWaypoints
 {
     std::vector<Waypoint<E>*> result;
     result.reserve(elements.size());
-    
-    for(E element : elements) //Put every element in a waypoint.
+
+    for (E element : elements) //Put every element in a waypoint.
     {
         Waypoint<E>* waypoint = new Waypoint<E>(get_orientations(element), element); //Yes, this must be deleted when the algorithm is done!
         result.push_back(waypoint);
@@ -381,7 +381,7 @@ template<class E> inline void TravellingSalesman<E>::tryInsertMiddle(Waypoint<E>
     {
         return;
     }
-    
+
     for (size_t orientation = 0; orientation < waypoint->orientations.size(); orientation++)
     {
         int64_t removed_distance = vSize((*before_insert)->orientations[(*before_insert)->best_orientation].second - (*after_insert)->orientations[(*after_insert)->best_orientation].first); //Distance of the original move that we'll remove.
