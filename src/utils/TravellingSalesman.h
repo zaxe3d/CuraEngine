@@ -238,38 +238,38 @@ template<class E> std::vector<E> TravellingSalesman<E>::findPath(std::vector<E> 
         return std::vector<E>();
     }
 
-    std::vector<Waypoint<E>*> shuffle = fillWaypoints(elements);
     auto rng = std::default_random_engine(0xDECAFF); //Always use a fixed seed! Wouldn't want it to be nondeterministic.
-    std::shuffle(shuffle.begin(), shuffle.end(), rng); //"Randomly" shuffles the waypoints.
+    std::vector<Waypoint<E>*> shuffled = fillWaypoints(elements);
+    std::shuffle(shuffled.begin(), shuffled.end(), rng); //"Randomly" shuffles the waypoints.
 
     std::list<Waypoint<E>*> result;
 
     if (!starting_point) //If there is no starting point, just insert the initial element.
     {
-        shuffle[0]->best_orientation = 0; //Choose an arbitrary orientation for the first element.
-        result.push_back(shuffle[0]); //Due to the check at the start, we know that shuffled always contains at least 1 element.
+        shuffled[0]->best_orientation = 0; //Choose an arbitrary orientation for the first element.
+        result.push_back(shuffled[0]); //Due to the check at the start, we know that shuffled always contains at least 1 element.
     }
     else //If there is a starting point, insert the initial element after it.
     {
         int64_t best_distance = std::numeric_limits<int64_t>::max(); //Change in travel distance to insert the waypoint. Minimise this distance by varying the orientation.
         size_t best_orientation; //In what orientation to insert the element.
-        for (size_t orientation = 0; orientation < shuffle[0]->orientations.size(); orientation++)
+        for (size_t orientation = 0; orientation < shuffled[0]->orientations.size(); orientation++)
         {
-            int64_t distance = vSize(*starting_point - shuffle[0]->orientations[orientation].first); //Distance from the starting point to the start point of this element.
+            int64_t distance = vSize(*starting_point - shuffled[0]->orientations[orientation].first); //Distance from the starting point to the start point of this element.
             if (distance < best_distance)
             {
                 best_distance = distance;
                 best_orientation = orientation;
             }
         }
-        shuffle[0]->best_orientation = best_orientation;
-        result.push_back(shuffle[0]);
+        shuffled[0]->best_orientation = best_orientation;
+        result.push_back(shuffled[0]);
     }
 
     //Now randomly insert the rest of the points.
-    for (size_t next_to_insert = 1; next_to_insert < shuffle.size(); next_to_insert++)
+    for (size_t next_to_insert = 1; next_to_insert < shuffled.size(); next_to_insert++)
     {
-        Waypoint<E>* waypoint = shuffle[next_to_insert];
+        Waypoint<E>* waypoint = shuffled[next_to_insert];
         int64_t best_distance = std::numeric_limits<int64_t>::max(); //Change in travel distance to insert the waypoint. Minimise this distance by varying the insertion point and orientation.
         WaypointListIterator best_insert; //Where to insert the element. It will be inserted before this element. If it's nullptr, insert at the very front.
         size_t best_orientation; //In what orientation to insert the element.
