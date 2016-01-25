@@ -265,28 +265,7 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
                 {
                     continue;
                 }
-                unsigned long long distance_start_start = vSize2(current_start - lines[neighbour][0]);
-                unsigned long long distance_start_end = vSize2(current_start - lines[neighbour].back());
-                unsigned long long distance_end_start = vSize2(current_end - lines[neighbour][0]);
-                unsigned long long distance_end_end = vSize2(current_end - lines[neighbour].back());
-                if (distance_start_start < cluster_grid_size * cluster_grid_size && distance_end_end < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other.
-                {
-                    if (distance_end_end < best_distance) //Best neighbour and orientation so far.
-                    {
-                        best_polygon = neighbour;
-                        best_distance = distance_end_end;
-                        best_start = lines[neighbour].size() - 1;
-                    }
-                }
-                if (distance_start_end < cluster_grid_size * cluster_grid_size && distance_end_start < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other, but in reverse direction.
-                {
-                    if (distance_end_start < best_distance)
-                    {
-                        best_polygon = neighbour;
-                        best_distance = distance_end_start;
-                        best_start = 0;
-                    }
-                }
+                tryCluster(neighbour, current_start, current_end, &best_polygon, &best_distance, &best_start);
             }
             if (best_polygon != static_cast<size_t>(-1)) //We found one.
             {
@@ -298,6 +277,38 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
         }
     }
     return clusters;
+}
+
+void LineOrderOptimizer::tryCluster(size_t line, const Point current_start, const Point current_end, size_t* best_polygon, unsigned long long* best_distance, size_t* best_start)
+{
+    //Input checking.
+    if (!best_polygon || !best_distance || !best_start) //Output parameter missing.
+    {
+        return;
+    }
+    
+    const unsigned long long distance_start_start = vSize2(current_start - lines[line][0]);
+    const unsigned long long distance_start_end = vSize2(current_start - lines[line].back());
+    const unsigned long long distance_end_start = vSize2(current_end - lines[line][0]);
+    const unsigned long long distance_end_end = vSize2(current_end - lines[line].back());
+    if (distance_start_start < cluster_grid_size * cluster_grid_size && distance_end_end < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other.
+    {
+        if (distance_end_end < *best_distance) //Best neighbour and orientation so far.
+        {
+            *best_polygon = line;
+            *best_distance = distance_end_end;
+            *best_start = lines[line].size() - 1;
+        }
+    }
+    if (distance_start_end < cluster_grid_size * cluster_grid_size && distance_end_start < cluster_grid_size * cluster_grid_size) //Two lines are alongside each other, but in reverse direction.
+    {
+        if (distance_end_start < *best_distance)
+        {
+            *best_polygon = line;
+            *best_distance = distance_end_start;
+            *best_start = 0;
+        }
+    }
 }
 
 }//namespace cura
