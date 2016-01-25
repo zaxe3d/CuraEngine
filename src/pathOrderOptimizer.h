@@ -116,6 +116,29 @@ private:
      * vector of indices pointing to positions in \link polygons.
      */
     std::vector<Cluster> cluster();
+
+    /*!
+     * \brief Tries to insert the specified line in the currently processed
+     * cluster.
+     *
+     * The distance of the line to the current line (represented by
+     * \p current_start and \p current_end) is measured, and compared to the
+     * distance of the best candidate to insert so far. If it is shorter, then
+     * the new line is stored via \p best_polygon as the best line to add to the
+     * cluster.
+     *
+     * \param line The index of the new line to try to add to the cluster.
+     * \param current_start The start point of the previous line that was added.
+     * \param current_end The end point of the previous line that was added.
+     * \param best_polygon The line that is the best candidate to insert so far.
+     * This parameter may be changed by this function if the new line is better.
+     * \param best_distance The distance of the best candidate to insert so far.
+     * This parameter may be changed by this function if the new line is better.
+     * \param best_start The starting vertex index of the best candidate to
+     * insert so far. This parameter may be changed by this function if the new
+     * line is better.
+     */
+    void tryCluster(size_t line, const Point current_start, const Point current_end, size_t* best_polygon, unsigned long long* best_distance, size_t* best_start);
 };
 
 }//namespace cura
