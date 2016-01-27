@@ -167,13 +167,13 @@ void LineOrderOptimizer::optimize()
         const size_t first_line_index = line_clusters[cluster_index][0]; //The first line in the current cluster.
         const size_t last_line_index = line_clusters[cluster_index].back(); //The last line in the current cluster.
         const Point start_normal = lines[first_line_index][polyStart[first_line_index]]; //Start of the path, not mirrored.
-        const Point end_normal = lines[last_line_index][(polyStart[last_line_index] - 1) % lines[last_line_index].size()]; //End of the path, not mirrored.
+        const Point end_normal = lines[last_line_index][(polyStart[last_line_index] + lines[last_line_index].size() - 1) % lines[last_line_index].size()]; //End of the path, not mirrored.
         result.push_back(std::pair<Point, Point>(start_normal, end_normal));
         result.push_back(std::pair<Point, Point>(end_normal, start_normal)); //Can also insert in reverse!
         if (line_clusters[cluster_index].size() > 1u) //If the cluster has one line, mirroring the line is equal to reversing the path. Otherwise, we must also include mirrored options.
         {
-            const Point start_mirrored = lines[first_line_index][(polyStart[first_line_index] - 1) % lines[last_line_index].size()]; //Start of the path, mirrored.
-            const Point end_mirrored = lines[first_line_index][(polyStart[first_line_index] - 1) % lines[last_line_index].size()]; //End of the path, mirrored.
+            const Point start_mirrored = lines[first_line_index][(polyStart[first_line_index] + polyStart[first_line_index].size() - 1) % lines[last_line_index].size()]; //Start of the path, mirrored.
+            const Point end_mirrored = lines[first_line_index][(polyStart[first_line_index] + polyStart[first_line_index].size() - 1) % lines[last_line_index].size()]; //End of the path, mirrored.
             result.push_back(std::pair<Point, Point>(start_mirrored, end_mirrored));
             result.push_back(std::pair<Point, Point>(end_mirrored, start_mirrored));
         }
@@ -255,7 +255,7 @@ std::vector<std::vector<size_t>> LineOrderOptimizer::cluster()
         while (best_polygon != static_cast<size_t>(-1)) //Keep going until there is no valid neighbour.
         {
             Point current_start = lines[current_polygon][polyStart[current_polygon]]; //Start and end point of the current polygon. These are used to find the distance to the next polygon.
-            Point current_end = lines[current_polygon][(polyStart[current_polygon] - 1) % lines[current_polygon].size()];
+            Point current_end = lines[current_polygon][(polyStart[current_polygon] + lines[current_polygon].size() - 1) % lines[current_polygon].size()];
             best_polygon = static_cast<size_t>(-1);
             unsigned long long best_distance = cluster_grid_size * cluster_grid_size + 1; //grid_size squared since vSize2 gives squared distance.
             size_t best_start;
