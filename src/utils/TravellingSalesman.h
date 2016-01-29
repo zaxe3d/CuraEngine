@@ -339,8 +339,10 @@ template<class E> inline void TravellingSalesman<E>::tryInsertFirst(Waypoint<E>*
         {
             before_distance = vSize(*starting_point - waypoint->orientation_indices[orientation].first);
         }
-        int64_t after_distance = vSize(waypoint->orientation_indices[orientation].second - (*first_element)->orientation_indices[(*first_element)->best_orientation_index].first); //From the end of this element to the start of the first element.
-        int64_t distance = before_distance + after_distance;
+        const Point end_of_this = waypoint->orientation_indices[orientation].second;
+        const Point start_of_first = (*first_element)->orientation_indices[(*first_element)->best_orientation_index].first;
+        const int64_t after_distance = vSize(end_of_this - start_of_first); //From the end of this element to the start of the first element.
+        const int64_t distance = before_distance + after_distance;
         if (distance < *best_distance)
         {
             *best_distance = distance;
@@ -359,7 +361,9 @@ template<class E> inline void TravellingSalesman<E>::tryInsertLast(Waypoint<E>* 
 
     for (size_t orientation = 0; orientation < waypoint->orientation_indices.size(); orientation++)
     {
-        int64_t distance = vSize((*last_element)->orientation_indices[(*last_element)->best_orientation_index].second - waypoint->orientation_indices[orientation].first); //From the end of the last element to the start of this element.
+        const Point end_of_last = (*last_element)->orientation_indices[(*last_element)->best_orientation_index].second;
+        const Point start_of_this = waypoint->orientation_indices[orientation].first;
+        const int64_t distance = vSize(end_of_last - start_of_this); //From the end of the last element to the start of this element.
         if (distance < *best_distance)
         {
             *best_distance = distance;
@@ -378,10 +382,14 @@ template<class E> inline void TravellingSalesman<E>::tryInsertMiddle(Waypoint<E>
 
     for (size_t orientation = 0; orientation < waypoint->orientation_indices.size(); orientation++)
     {
-        int64_t removed_distance = vSize((*before_insert)->orientation_indices[(*before_insert)->best_orientation_index].second - (*after_insert)->orientation_indices[(*after_insert)->best_orientation_index].first); //Distance of the original move that we'll remove.
-        int64_t before_distance = vSize((*before_insert)->orientation_indices[(*before_insert)->best_orientation_index].second - waypoint->orientation_indices[orientation].first); //From end of previous element to start of this element.
-        int64_t after_distance = vSize(waypoint->orientation_indices[orientation].second - (*after_insert)->orientation_indices[(*after_insert)->best_orientation_index].first); //From end of this element to start of next element.
-        int64_t distance = before_distance + after_distance - removed_distance;
+        const Point end_of_before = (*before_insert)->orientation_indices[(*before_insert)->best_orientation_index].second;
+        const Point start_of_after = (*after_insert)->orientation_indices[(*after_insert)->best_orientation_index].first;
+        const Point start_of_this = waypoint->orientation_indices[orientation].first;
+        const Point end_of_this = waypoint->orientation_indices[orientation].second;
+        const int64_t removed_distance = vSize(end_of_before - start_of_after); //Distance of the original move that we'll remove.
+        const int64_t before_distance = vSize(end_of_before - start_of_this); //From end of previous element to start of this element.
+        const int64_t after_distance = vSize(end_of_this - start_of_after); //From end of this element to start of next element.
+        const int64_t distance = before_distance + after_distance - removed_distance;
         if (distance < *best_distance)
         {
             *best_distance = distance;
