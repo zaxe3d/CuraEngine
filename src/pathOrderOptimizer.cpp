@@ -174,8 +174,8 @@ void LineOrderOptimizer::optimize()
         result.push_back(std::pair<Point, Point>(end_normal, start_normal)); //Can also insert in reverse!
         if (line_clusters[cluster_index].size() > 1u) //If the cluster has one line, mirroring the line is equal to reversing the path. Otherwise, we must also include mirrored options.
         {
-            const Point start_mirrored = first_line[(polyStart[first_line_index] + first_line.size() - 1) % last_line.size()]; //Start of the path, mirrored.
-            const Point end_mirrored = first_line[(polyStart[first_line_index] + first_line.size() - 1) % last_line.size()]; //End of the path, mirrored.
+            const Point start_mirrored = first_line[(polyStart[first_line_index] + first_line.size() - 1) % first_line.size()]; //Start of the path, mirrored.
+            const Point end_mirrored = first_line[(polyStart[first_line_index] + first_line.size() - 1) % first_line.size()]; //End of the path, mirrored.
             result.push_back(std::pair<Point, Point>(start_mirrored, end_mirrored));
             result.push_back(std::pair<Point, Point>(end_mirrored, start_mirrored));
         }
