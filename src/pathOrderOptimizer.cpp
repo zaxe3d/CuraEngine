@@ -39,23 +39,23 @@ void PathOrderOptimizer::optimize()
 
 
     Point prev_point = startPoint;
-    for (unsigned int i_polygon = 0; i_polygon < polygons.size(); i_polygon++) /// actual path order optimizer
+    for (unsigned int polygon_idx = 0; polygon_idx < polygons.size(); polygon_idx++) /// actual path order optimizer
     {
         int best = -1;
         float bestDist = std::numeric_limits<float>::infinity();
 
 
-        for (unsigned int i_polygon = 0; i_polygon < polygons.size(); i_polygon++)
+        for (unsigned int polygon2_idx = 0; polygon2_idx < polygons.size(); polygon2_idx++)
         {
-            if (picked[i_polygon] || polygons[i_polygon].size() < 1) /// skip single-point-polygons
+            if (picked[polygon2_idx] || polygons[polygon2_idx].size() < 1) /// skip single-point-polygons
                 continue;
 
-            assert(polygons[i_polygon].size() != 2);
+            assert(polygons[polygon2_idx].size() != 2);
 
-            float dist = vSize2f(polygons[i_polygon][polyStart[i_polygon]] - prev_point);
+            float dist = vSize2f(polygons[polygon2_idx][polyStart[polygon2_idx]] - prev_point);
             if (dist < bestDist)
             {
-                best = i_polygon;
+                best = polygon2_idx;
                 bestDist = dist;
             }
 
