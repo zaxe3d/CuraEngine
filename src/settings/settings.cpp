@@ -85,13 +85,23 @@ void SettingsBase::setSetting(std::string key, std::string value)
 
 std::string SettingsBase::getSettingString(std::string key) const
 {
+//     logError(">>>%s, %s\n", key.c_str(), level_id.c_str());
+    std::cout << key << "\t\t : " << level_id << "\n";
+//     if (level_id == std::string("global"))
+//     {
+//         logError("WARNING: %s retrieved globally!\n", key.c_str());
+//     }
+    return _getSettingString(key);
+}
+std::string SettingsBase::_getSettingString(std::string key) const
+{
     if (setting_values.find(key) != setting_values.end())
     {
         return setting_values.at(key);
     }
     if (parent)
     {
-        return parent->getSettingString(key);
+        return parent->_getSettingString(key);
     }
 
     const_cast<SettingsBase&>(*this).setting_values[key] = "";
@@ -104,6 +114,10 @@ void SettingsMessenger::setSetting(std::string key, std::string value)
     parent->setSetting(key, value);
 }
 
+std::string SettingsMessenger::_getSettingString(std::string key) const
+{
+    return parent->_getSettingString(key);
+}
 std::string SettingsMessenger::getSettingString(std::string key) const
 {
     return parent->getSettingString(key);
