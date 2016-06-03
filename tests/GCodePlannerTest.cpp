@@ -14,7 +14,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(GCodePlannerTest);
 
 void GCodePlannerTest::setUp()
 {
-    SettingsBase settings;
+    SettingsBase settings("global");
     settings.setSetting("machine_extruder_count", "1");
     MeshGroup meshgroup(&settings);
     storage = new SliceDataStorage(&meshgroup); //Empty data.

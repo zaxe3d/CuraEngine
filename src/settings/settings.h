@@ -222,9 +222,10 @@ class SettingsBase : public SettingsBaseVirtual
     friend class SettingRegistry;
 private:
     std::unordered_map<std::string, std::string> setting_values;
+    std::string level_id; //!< The name of the level at which this is retrieved "global", "extruder-1", etc.
 public:
-    SettingsBase(); //!< SettingsBase without a parent settings object
-    SettingsBase(SettingsBaseVirtual* parent); //!< construct a SettingsBase with a parent settings object
+    SettingsBase(std::string level_id); //!< SettingsBase without a parent settings object
+    SettingsBase(SettingsBaseVirtual* parent, std::string level_id); //!< construct a SettingsBase with a parent settings object
 
     /*!
      * Set a setting to a value.

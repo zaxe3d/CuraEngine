@@ -15,7 +15,7 @@ static inline uint32_t pointHash(const Point3& p)
 }
 
 Mesh::Mesh(SettingsBaseVirtual* parent)
-: SettingsBase(parent)
+: SettingsBase(parent, std::string("mesh"))
 {
 }
 

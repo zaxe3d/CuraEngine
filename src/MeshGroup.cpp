@@ -29,7 +29,7 @@ void* fgets_(char* ptr, size_t len, FILE* f)
 }
 
 MeshGroup::MeshGroup(SettingsBaseVirtual* settings_base)
-: SettingsBase(settings_base)
+: SettingsBase(settings_base, std::string("meshgroup"))
 , extruder_count(-1)
 {}
 

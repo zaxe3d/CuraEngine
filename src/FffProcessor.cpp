@@ -6,7 +6,8 @@ namespace cura
 FffProcessor FffProcessor::instance; // definition must be in cpp
 
 FffProcessor::FffProcessor()
-: polygon_generator(this)
+: SettingsBase("global")
+, polygon_generator(this)
 , gcode_writer(this)
 , meshgroup_number(0)
 {

@@ -47,13 +47,15 @@ SettingsBaseVirtual::SettingsBaseVirtual(SettingsBaseVirtual* parent)
 {
 }
 
-SettingsBase::SettingsBase()
+SettingsBase::SettingsBase(std::string level_id)
 : SettingsBaseVirtual(NULL)
+, level_id(level_id)
 {
 }
 
-SettingsBase::SettingsBase(SettingsBaseVirtual* parent)
+SettingsBase::SettingsBase(SettingsBaseVirtual* parent, std::string level_id)
 : SettingsBaseVirtual(parent)
+, level_id(level_id)
 {
 }
 

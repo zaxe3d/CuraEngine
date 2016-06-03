@@ -13,7 +13,7 @@ public:
     int getExtruderNr() { return extruder_nr; }
     
     ExtruderTrain(SettingsBaseVirtual* settings, int extruder_nr)
-    : SettingsBase(settings)
+    : SettingsBase(settings, std::string("extruder"))
     , extruder_nr(extruder_nr)
     { }
     
