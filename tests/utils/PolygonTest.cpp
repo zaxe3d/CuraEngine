@@ -36,7 +36,8 @@ void PolygonTest::tearDown()
 
 void PolygonTest::insideTest()
 {
-    CPPUNIT_ASSERT(small_polygon.inside(Point(50, 50)));
+    bool test = small_polygon.inside(Point(50, 50));
+    CPPUNIT_ASSERT(test);
 }
 
 }
