@@ -833,7 +833,7 @@ void FffGcodeWriter::addMeshPartToGCode(SliceDataStorage& storage, SliceMeshStor
     bool skin_alternate_rotation = mesh->getSettingBoolean("skin_alternate_rotation") && ( mesh->getSettingAsCount("top_layers") >= 4 || mesh->getSettingAsCount("bottom_layers") >= 4 );
 
     EFillMethod infill_pattern = mesh->getSettingAsFillMethod("infill_pattern");
-    int infill_angle = 45;
+    int infill_angle = 0;
     if ((infill_pattern == EFillMethod::LINES || infill_pattern == EFillMethod::ZIG_ZAG))
     {
         unsigned int combined_infill_layers = std::max(1U, round_divide(mesh->getSettingInMicrons("infill_sparse_thickness"), std::max(getSettingInMicrons("layer_height"), (coord_t)1)));
@@ -865,7 +865,7 @@ void FffGcodeWriter::addMeshPartToGCode(SliceDataStorage& storage, SliceMeshStor
     }
 
     EFillMethod skin_pattern = mesh->getSettingAsFillMethod("top_bottom_pattern");
-    int skin_angle = 45;
+    int skin_angle = 0;
     if ((skin_pattern == EFillMethod::LINES || skin_pattern == EFillMethod::ZIG_ZAG) && layer_nr & 1)
     {
         skin_angle += 90; // should coincide with infill_angle (if both skin and infill are lines) so that the first top layer is orthogonal to the last infill layer
@@ -1311,7 +1311,7 @@ bool FffGcodeWriter::addSupportRoofsToGCode(SliceDataStorage& storage, GCodePlan
     }
     else 
     {
-        fillAngle = 45 + (((layer_nr % 2) + 2) % 2) * 90; // alternate between the two kinds of diagonal:  / and \ .
+        fillAngle = 0 + (((layer_nr % 2) + 2) % 2) * 90; // alternate between the two kinds of diagonal:  / and \ .
         // +2) %2 to handle negative layer numbers
     }
     int support_skin_overlap = 0; // the skin (roofs/bottoms) should never be expanded outwards
