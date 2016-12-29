@@ -420,7 +420,7 @@ void GCodePlanner::addPolygonsByOptimizer(Polygons& polygons, GCodePathConfig* c
         addPolygon(polygons[poly_idx], orderOptimizer.polyStart[poly_idx], config, wall_overlap_computation, wall_0_wipe_dist, spiralize);
     }
 }
-void GCodePlanner::addLinesByOptimizer(Polygons& polygons, GCodePathConfig* config, SpaceFillType space_fill_type, int wipe_dist)
+void GCodePlanner::addLinesByOptimizer(Polygons& polygons, GCodePathConfig* config, SpaceFillType space_fill_type, int wipe_dist, bool add_reverse_lines)
 {
     LineOrderOptimizer orderOptimizer(lastPosition);
     for (unsigned int line_idx = 0; line_idx < polygons.size(); line_idx++)
@@ -434,8 +434,12 @@ void GCodePlanner::addLinesByOptimizer(Polygons& polygons, GCodePathConfig* conf
         int start = orderOptimizer.polyStart[poly_idx];
         int end = 1 - start;
         Point& p0 = polygon[start];
-        addTravel(p0);
         Point& p1 = polygon[end];
+        if (!add_reverse_lines && p0.X + p0.Y < p1.X + p1.Y)
+        {
+            continue;
+        }
+        addTravel(p0);
         addExtrusionMove(p1, config, space_fill_type);
         if (wipe_dist != 0)
         {
