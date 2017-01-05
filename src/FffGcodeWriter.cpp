@@ -1127,11 +1127,11 @@ void FffGcodeWriter::processSkinAndPerimeterGaps(GCodePlanner& gcode_layer, Slic
 
         if (pattern == EFillMethod::GRID || pattern == EFillMethod::LINES || pattern == EFillMethod::TRIANGLES)
         {
-            gcode_layer.addLinesByOptimizer(skin_lines, &mesh->skin_config, SpaceFillType::Lines, mesh->getSettingInMicrons("infill_wipe_dist"), false);
+            gcode_layer.addLinesByOptimizer(skin_lines, &mesh->skin_config, SpaceFillType::Lines, mesh->getSettingInMicrons("infill_wipe_dist"));
         }
         else
         {
-            gcode_layer.addLinesByOptimizer(skin_lines, &mesh->skin_config, (pattern == EFillMethod::ZIG_ZAG)? SpaceFillType::PolyLines : SpaceFillType::Lines, false);
+            gcode_layer.addLinesByOptimizer(skin_lines, &mesh->skin_config, (pattern == EFillMethod::ZIG_ZAG)? SpaceFillType::PolyLines : SpaceFillType::Lines);
         }
     }
 
