@@ -1,0 +1,49 @@
+/** Copyright (C) 2017 Tim Kuipers - Released under terms of the AGPLv3 License */
+#ifndef TEXTURE_PROCESSING_FLAT_PICTURE_H
+#define TEXTURE_PROCESSING_FLAT_PICTURE_H
+
+#include "../gcodeExport.h"
+#include "../utils/intpoint.h"
+
+namespace cura
+{
+
+class FlatPicture
+{
+public:
+    struct PointWidth
+    {
+        Point location;
+        coord_t width;
+    };
+
+    FlatPicture(const char* filename, const MeshGroup& meshgroup, GCodeExport& gcode);
+    
+    Material mat;
+    GCodeExport& gcode;
+    RetractionConfig retraction_config;
+    
+    Point size = Point(MM2INT(35), MM2INT(35));
+    Point offset = Point(MM2INT(50), MM2INT(50));
+    coord_t line_dist = 700;
+    coord_t sample_dist = 400;
+    
+    coord_t nominal_extrusion_width = 350;
+    double nominal_speed = 40;
+    double max_speed = 150;
+    double min_speed = 5;
+    
+    
+    double travel_speed = 40;
+    
+    void generateLines(std::vector<std::vector<PointWidth>>& black_lines, std::vector<std::vector<PointWidth>>& white_lines);
+    /*!
+     * 
+     * \param starting_direction 1 or 0: whether to start going up the first line and going down the second etc., or going down the first and up the second
+     */
+    void drawLines(const std::vector<std::vector<PointWidth>>& lines, coord_t layer_height);
+};
+
+} // namespace cura
+
+#endif // TEXTURE_PROCESSING_FLAT_PICTURE_H
