@@ -107,7 +107,7 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
     
         //gcode.startExtruder(0);
         gcode.writeMove(Point3(offset.X, offset.Y, z), travel_speed, 0.0);
-        drawLines(black_lines, layer_height);
+        drawLines(black_lines, layer_height, 0); //layer_nr % 2 == 1);
         //gcode.switchExtruder(1, retraction_config);
         
         gcode.switchExtruder(1, retraction_config);
@@ -148,7 +148,7 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
         */
         
         gcode.writeMove(Point3(offset.X + size.X, offset.Y, z), travel_speed, 0.0);
-        drawLines(white_lines, layer_height);
+        drawLines(white_lines, layer_height, 0); // layer_nr % 2 == 1);
     
         layer_height = (layer_nr == 0)? 200 : 100; // layer heights: 0.3, 0.2, 0.1, 0.1, 0.1, ...
         z += layer_height;
@@ -181,14 +181,16 @@ void FlatPicture::generateLines(std::vector< std::vector< FlatPicture::PointWidt
         {
             const PointWidth& prev_point = prev_white_line[point_idx];
             const PointWidth& next_point = next_white_line[point_idx];
-            coord_t width = (prev_point.width + next_point.width) / 2;
-            black_line.push_back(PointWidth{(prev_point.location + next_point.location) / 2, width});
+            PointWidth pw;
+            pw.width = (prev_point.width + next_point.width) / 2;
+            pw.location = (prev_point.location + Point(prev_point.width / 2, 0) + next_point.location - Point(next_point.width / 2, 0)) / 2;
+            black_line.push_back(pw);
         }
     }
 }
 
 
-void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWidth > >& lines, coord_t layer_height)
+void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWidth > >& lines, coord_t layer_height, bool transposed)
 {
     for (unsigned int line_idx = 0; line_idx < lines.size(); line_idx++)
     {
@@ -211,7 +213,7 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             point_update_dir = -1;
         }
         PointWidth prev = line[point_start_idx];
-        gcode.writeMove(offset + prev.location, travel_speed, 0.0);
+        gcode.writeMove(offset + ((transposed)? Point(prev.location.Y, prev.location.X) : prev.location), travel_speed, 0.0);
         for (int point_idx = point_start_idx + point_update_dir; point_idx * point_update_dir < point_end_idx * point_update_dir; point_idx += point_update_dir)
         {
             const PointWidth& next = line[point_idx];
@@ -220,10 +222,10 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             double speed = nominal_speed * nominal_extrusion_width / width;
             speed = std::min(speed, max_speed);
             
-            double extrusion_mm3_per_mm = INT2MM(width) * INT2MM(layer_height);
+            double extrusion_mm3_per_mm = flow * INT2MM(width) * INT2MM(layer_height);
             log("generating white point with width %f and speed %f\n", extrusion_mm3_per_mm / 0.3, speed);
             
-            gcode.writeMove(offset + next.location, speed, extrusion_mm3_per_mm);
+            gcode.writeMove(offset + ((transposed)? Point(next.location.Y, next.location.X) : next.location), speed, extrusion_mm3_per_mm);
             
             prev = next;
         }
