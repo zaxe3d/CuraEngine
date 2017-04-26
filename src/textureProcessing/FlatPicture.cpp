@@ -88,6 +88,10 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
     gcode.writeCode(";END_OF_HEADER");
     gcode.writeCode(";Generated with Cura_SteamEngine master");
     gcode.writeCode("");
+    gcode.writeCode("M204 S4000 ; travel acceleration"); // set default acceleration and jerk values as if for travel moves in order to accomodate swift speed changes needed for horizontal hatching
+    gcode.writeCode("M205 X25 ; travel jerk");
+    
+    
     
     gcode.writeCode("T1");
     gcode.startExtruder(1);
@@ -130,15 +134,15 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
         //gcode.startExtruder(0);
         if (layer_nr < 4)
 	{
-            float speed = (layer_nr == 0)? 20 : nominal_speed;
+            float speed = (layer_nr == 0)? 20 : normal_speed;
             drawPoly(perimeter, speed, layer_height, dense_fill_line_width);
 	    gcode.writeMove(Point3(offset.X, offset.Y, z), travel_speed, 0.0);
 	    drawDenseFill(layer_height, speed, layer_nr % 2 == 0);
 	    
 	}
 	else if (layer_nr == 4)
-	{
-	    gcode.writeCode("G1 F1500 E-6.5");
+        {
+            gcode.writeCode("M104 T1 S0");
 	    gcode.switchExtruder(0, retraction_config);
 	    gcode.writeCode("M109 S210");
 	    { // prime
@@ -146,61 +150,19 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
 		gcode.resetExtrusionValue();
 	    }
 	    gcode.writeRetraction(retraction_config, true);
+            gcode.writeCode("G1 Z2");
 	    gcode.writeCode("");
             
             drawPoly(perimeter, nominal_speed, layer_height, dense_fill_line_width);
 	    drawLines(black_lines, layer_height, layer_nr % 2 == 0);
 	}
-	else if (false)
-	{
-	    gcode.writeMove(Point3(offset.X, offset.Y, z), travel_speed, 0.0);
-	    drawLines(black_lines, layer_height, 0); //layer_nr % 2 == 1);
-	    //gcode.switchExtruder(1, retraction_config);
-	    
-	    gcode.switchExtruder(1, retraction_config);
-	    if (layer_nr == 0)
-	    {
-		gcode.writePrimeTrain(travel_speed);
-		gcode.resetExtrusionValue();
-	    }
-	    gcode.writeRetraction(retraction_config, true);
-	    gcode.writeCode("M109 S210");
-	    /*
-	    if (layer_nr == 0)
-	    {
-		gcode.writeCode("");
-		gcode.switchExtruder(1, retraction_config);
-    //             gcode.writeCode("G1 F1500 E-6.5");
-    //             gcode.writeCode("T1");
-		gcode.writeCode("M109 S210");
-		gcode.writeMove(Point3(164, 6, 2), 150, 0.0);
-		gcode.writeCode("G280");
-		gcode.resetExtrusionValue();
-		gcode.writeRetraction(retraction_config, true);
-    //             gcode.writeCode("G92 E0");
-    //             gcode.writeCode("G1 F1500 E-6.5");
-		gcode.writeCode("");
-	    }
-	    else
-	    {
-		gcode.writeCode("");
-		gcode.writeCode("G1 F1500 E-6.5");
-		gcode.writeCode("T1");
-		gcode.writeCode("M109 S210");
-		gcode.resetExtrusionValue();
-		gcode.writeRetraction(retraction_config, true);
-    //             gcode.writeCode("G92 E-6.5");
-		gcode.writeCode("");
-	    }
-	    */
-	    
-	    gcode.writeMove(Point3(offset.X + size.X, offset.Y, z), travel_speed, 0.0);
-	    drawLines(white_lines, layer_height, 0); // layer_nr % 2 == 1);
-	}
         layer_height = (layer_nr == 0)? 200 : 100; // layer heights: 0.3, 0.2, 0.1, 0.1, 0.1, ...
         z += layer_height;
+        
+        gcode.writeRetraction(retraction_config, true);
     }
     
+    gcode.writeRetraction(retraction_config, true);
     gcode.writeMove(offset / 2, travel_speed, 0.0);
 }
 
@@ -217,7 +179,7 @@ void FlatPicture::generateLines(std::vector< std::vector< FlatPicture::PointWidt
             line.push_back(PointWidth{Point(x, y), width});
         }
     }
-    
+    /*
     assert(white_lines.empty());
     for (unsigned int line_idx = 0; line_idx < black_lines.size() - 1; line_idx++)
     {
@@ -236,6 +198,7 @@ void FlatPicture::generateLines(std::vector< std::vector< FlatPicture::PointWidt
             black_line.push_back(pw);
         }
     }
+    */
 }
 
 
@@ -269,10 +232,14 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             
             coord_t width = std::max(coord_t(1), (prev.width + next.width) / 2);
             double speed = nominal_speed * nominal_extrusion_width / width;
+            if (width > nominal_extrusion_width)
+            {
+                speed = nominal_speed - (nominal_speed - speed) * .5;
+            }
             speed = std::min(speed, max_speed);
             
             double extrusion_mm3_per_mm = flow * INT2MM(width) * INT2MM(layer_height);
-            log("generating white point with width %f and speed %f\n", extrusion_mm3_per_mm / 0.3, speed);
+            log("generating point with width %f and speed %f\n", INT2MM(width), speed);
             
             gcode.writeMove(offset + ((transposed)? Point(next.location.Y, next.location.X) : next.location), speed, extrusion_mm3_per_mm);
             
@@ -303,15 +270,35 @@ void FlatPicture::drawDenseFill(coord_t layer_height, float speed, bool transpos
 
 }
 
-void FlatPicture::drawPoly(Polygons& perimeter, float speed, coord_t layer_height, coord_t width)
+void FlatPicture::drawPoly(Polygons& polys, float speed, coord_t layer_height, coord_t width)
 {
-    for (PolygonRef poly : perimeter)
+    std::vector<int> start_idices;
+    for (PolygonRef poly : polys)
     {
-        if (poly.size() == 0) continue;
-        Point start = poly.back();
-        gcode.writeMove(offset + start, travel_speed, 0.0); 
-        for (Point p : poly)
+        int best = 0;
+        coord_t best_dist = 9999999;
+        for (int point_idx = 0; point_idx < poly.size(); point_idx++)
         {
+            coord_t dist = vSize(gcode.getPositionXY() - poly[point_idx]);
+            if (dist < best_dist)
+            {
+                best_dist = dist;
+                best = point_idx;
+            }
+        }
+        start_idices.push_back(best);
+    }
+    
+    for (int poly_idx = 0; poly_idx < polys.size(); poly_idx++)
+    {
+        PolygonRef poly = polys[poly_idx];
+        int start_idx = start_idices[poly_idx];
+        if (poly.size() == 0) continue;
+        Point start = poly[(start_idx - 1 + poly.size()) % poly.size()];
+        gcode.writeMove(offset + start, travel_speed, 0.0); 
+        for (int p_idx = 0; p_idx < poly.size(); p_idx++)
+        {
+            Point p = poly[(start_idx + p_idx) % poly.size()]; 
             double extrusion_mm3_per_mm = INT2MM(width) * INT2MM(layer_height);
             gcode.writeMove(offset + p, speed, extrusion_mm3_per_mm);
         }

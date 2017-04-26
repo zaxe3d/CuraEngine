@@ -25,15 +25,16 @@ public:
     
     Point size = Point(MM2INT(35), MM2INT(35));
     Point offset = Point(MM2INT(50), MM2INT(50));
-    coord_t line_dist = 700;
-    coord_t sample_dist = 400;
+    coord_t line_dist = 600;
+    coord_t sample_dist = 200; // lower than 200 can already cause flooding in the firmware!!!
     
     coord_t nominal_extrusion_width = 350;
-    double nominal_speed = 40;
+    double nominal_speed = 25;
     double max_speed = 150;
     double min_speed = 5;
     
     
+    double normal_speed = 40;
     coord_t dense_fill_line_width = 350;
     
     double flow = 0.9;
