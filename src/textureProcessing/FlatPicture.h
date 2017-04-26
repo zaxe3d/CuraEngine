@@ -33,6 +33,9 @@ public:
     double max_speed = 150;
     double min_speed = 5;
     
+    
+    coord_t dense_fill_line_width = 350;
+    
     double flow = 0.9;
     
     double travel_speed = nominal_speed;
@@ -43,6 +46,10 @@ public:
      * \param starting_direction 1 or 0: whether to start going up the first line and going down the second etc., or going down the first and up the second
      */
     void drawLines(const std::vector<std::vector<PointWidth>>& lines, coord_t layer_height, bool transposed);
+
+    void drawDenseFill(coord_t layer_height, float speed, bool transposed);
+    
+    void drawPoly(Polygons& perimeter, float speed, coord_t layer_height, coord_t width);
 };
 
 } // namespace cura

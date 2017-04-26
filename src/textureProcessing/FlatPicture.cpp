@@ -27,6 +27,22 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
     generateLines(black_lines, white_lines);
     
     
+    Polygons outlines;
+    PolygonRef outline = outlines.newPoly();
+    outline.emplace_back(0, 0);
+    outline.emplace_back(size.X, 0);
+    outline.emplace_back(size.X, size.Y);
+    outline.emplace_back(0, size.Y);
+    
+    Polygons perimeter = outline.offset(dense_fill_line_width / 2);
+    
+    Polygons brim;
+    Polygons last_brim = perimeter;
+    for (unsigned int brim_count = 0; brim_count < 5; brim_count++)
+    {
+        last_brim = last_brim.offset(dense_fill_line_width);
+        brim.add(last_brim);
+    }
 //     SettingsBase settings;
 //     settings.setSetting("machine_gcode_flavor", "Griffin");
 //     settings.setSetting("machine_use_extruder_offset_to_offset_coords", "true");
@@ -53,11 +69,11 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
     gcode.writeCode(";GENERATOR.VERSION:master");
     gcode.writeCode(";GENERATOR.BUILD_DATE:2016-11-28");
     gcode.writeCode(";TARGET_MACHINE.NAME:Ultimaker 3");
-    gcode.writeCode(";EXTRUDER_TRAIN.0.INITIAL_TEMPERATURE:210");
+    gcode.writeCode(";EXTRUDER_TRAIN.0.INITIAL_TEMPERATURE:100");
     gcode.writeCode(";EXTRUDER_TRAIN.0.MATERIAL.VOLUME_USED:730");
     gcode.writeCode(";EXTRUDER_TRAIN.0.MATERIAL.GUID:506c9f0d-e3aa-4bd4-b2d2-23e2425b1aa9");
     gcode.writeCode(";EXTRUDER_TRAIN.0.NOZZLE.DIAMETER:0.4");
-    gcode.writeCode(";EXTRUDER_TRAIN.1.INITIAL_TEMPERATURE:100");
+    gcode.writeCode(";EXTRUDER_TRAIN.1.INITIAL_TEMPERATURE:210");
     gcode.writeCode(";EXTRUDER_TRAIN.1.MATERIAL.VOLUME_USED:628");
     gcode.writeCode(";EXTRUDER_TRAIN.1.MATERIAL.GUID:3ee70a86-77d8-4b87-8005-e4a1bc57d2ce");
     gcode.writeCode(";EXTRUDER_TRAIN.1.NOZZLE.DIAMETER:0.4");
@@ -73,27 +89,32 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
     gcode.writeCode(";Generated with Cura_SteamEngine master");
     gcode.writeCode("");
     
-    for (int layer_nr = 0; layer_nr < 4; layer_nr++)
+    gcode.writeCode("T1");
+    gcode.startExtruder(1);
+//             gcode.writeCode("T0");
+//     gcode.writeCode("M104 T0 S210");
+    gcode.writeCode("M109 S210");
+//             gcode.writeMove(Point3(170, 6, 2), 150, 0.0);
+    gcode.writePrimeTrain(travel_speed);
+//             gcode.writeCode("G280");
+    gcode.resetExtrusionValue();
+    gcode.writeRetraction(retraction_config, true);
+//             gcode.writeCode("G92 E0");
+//             gcode.writeCode("G1 F1500 E-6.5");
+    gcode.writeCode("");
+    
+    gcode.setZ(layer_height);
+    drawPoly(brim, 20, layer_height, dense_fill_line_width);
+    
+    for (int layer_nr = 0; layer_nr < 5; layer_nr++)
     {
         gcode.setZ(z);
         if (layer_nr == 0)
         {
-            gcode.writeCode("");
-            gcode.startExtruder(0);
-//             gcode.writeCode("T0");
-            gcode.writeCode("M104 T1 S210");
-            gcode.writeCode("M109 S210");
-//             gcode.writeMove(Point3(170, 6, 2), 150, 0.0);
-            gcode.writePrimeTrain(travel_speed);
-//             gcode.writeCode("G280");
-            gcode.resetExtrusionValue();
-            gcode.writeRetraction(retraction_config, true);
-//             gcode.writeCode("G92 E0");
-//             gcode.writeCode("G1 F1500 E-6.5");
-            gcode.writeCode("");
         }
         else
         {
+	    /*
             gcode.writeCode("");
             gcode.writeCode("G1 F1500 E-6.5");
             gcode.switchExtruder(0, retraction_config);
@@ -103,62 +124,90 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
             gcode.writeRetraction(retraction_config, true);
 //             gcode.writeCode("G92 E-6.5");
             gcode.writeCode("");
+            */
         }
     
         //gcode.startExtruder(0);
-        gcode.writeMove(Point3(offset.X, offset.Y, z), travel_speed, 0.0);
-        drawLines(black_lines, layer_height, 0); //layer_nr % 2 == 1);
-        //gcode.switchExtruder(1, retraction_config);
-        
-        gcode.switchExtruder(1, retraction_config);
-        if (layer_nr == 0)
-        {
-            gcode.writePrimeTrain(travel_speed);
-            gcode.resetExtrusionValue();
-        }
-        gcode.writeRetraction(retraction_config, true);
-        gcode.writeCode("M109 S210");
-        /*
-        if (layer_nr == 0)
-        {
-            gcode.writeCode("");
-            gcode.switchExtruder(1, retraction_config);
-//             gcode.writeCode("G1 F1500 E-6.5");
-//             gcode.writeCode("T1");
-            gcode.writeCode("M109 S210");
-            gcode.writeMove(Point3(164, 6, 2), 150, 0.0);
-            gcode.writeCode("G280");
-            gcode.resetExtrusionValue();
-            gcode.writeRetraction(retraction_config, true);
-//             gcode.writeCode("G92 E0");
-//             gcode.writeCode("G1 F1500 E-6.5");
-            gcode.writeCode("");
-        }
-        else
-        {
-            gcode.writeCode("");
-            gcode.writeCode("G1 F1500 E-6.5");
-            gcode.writeCode("T1");
-            gcode.writeCode("M109 S210");
-            gcode.resetExtrusionValue();
-            gcode.writeRetraction(retraction_config, true);
-//             gcode.writeCode("G92 E-6.5");
-            gcode.writeCode("");
-        }
-        */
-        
-        gcode.writeMove(Point3(offset.X + size.X, offset.Y, z), travel_speed, 0.0);
-        drawLines(white_lines, layer_height, 0); // layer_nr % 2 == 1);
-    
+        if (layer_nr < 4)
+	{
+            float speed = (layer_nr == 0)? 20 : nominal_speed;
+            drawPoly(perimeter, speed, layer_height, dense_fill_line_width);
+	    gcode.writeMove(Point3(offset.X, offset.Y, z), travel_speed, 0.0);
+	    drawDenseFill(layer_height, speed, layer_nr % 2 == 0);
+	    
+	}
+	else if (layer_nr == 4)
+	{
+	    gcode.writeCode("G1 F1500 E-6.5");
+	    gcode.switchExtruder(0, retraction_config);
+	    gcode.writeCode("M109 S210");
+	    { // prime
+		gcode.writePrimeTrain(travel_speed);
+		gcode.resetExtrusionValue();
+	    }
+	    gcode.writeRetraction(retraction_config, true);
+	    gcode.writeCode("");
+            
+            drawPoly(perimeter, nominal_speed, layer_height, dense_fill_line_width);
+	    drawLines(black_lines, layer_height, layer_nr % 2 == 0);
+	}
+	else if (false)
+	{
+	    gcode.writeMove(Point3(offset.X, offset.Y, z), travel_speed, 0.0);
+	    drawLines(black_lines, layer_height, 0); //layer_nr % 2 == 1);
+	    //gcode.switchExtruder(1, retraction_config);
+	    
+	    gcode.switchExtruder(1, retraction_config);
+	    if (layer_nr == 0)
+	    {
+		gcode.writePrimeTrain(travel_speed);
+		gcode.resetExtrusionValue();
+	    }
+	    gcode.writeRetraction(retraction_config, true);
+	    gcode.writeCode("M109 S210");
+	    /*
+	    if (layer_nr == 0)
+	    {
+		gcode.writeCode("");
+		gcode.switchExtruder(1, retraction_config);
+    //             gcode.writeCode("G1 F1500 E-6.5");
+    //             gcode.writeCode("T1");
+		gcode.writeCode("M109 S210");
+		gcode.writeMove(Point3(164, 6, 2), 150, 0.0);
+		gcode.writeCode("G280");
+		gcode.resetExtrusionValue();
+		gcode.writeRetraction(retraction_config, true);
+    //             gcode.writeCode("G92 E0");
+    //             gcode.writeCode("G1 F1500 E-6.5");
+		gcode.writeCode("");
+	    }
+	    else
+	    {
+		gcode.writeCode("");
+		gcode.writeCode("G1 F1500 E-6.5");
+		gcode.writeCode("T1");
+		gcode.writeCode("M109 S210");
+		gcode.resetExtrusionValue();
+		gcode.writeRetraction(retraction_config, true);
+    //             gcode.writeCode("G92 E-6.5");
+		gcode.writeCode("");
+	    }
+	    */
+	    
+	    gcode.writeMove(Point3(offset.X + size.X, offset.Y, z), travel_speed, 0.0);
+	    drawLines(white_lines, layer_height, 0); // layer_nr % 2 == 1);
+	}
         layer_height = (layer_nr == 0)? 200 : 100; // layer heights: 0.3, 0.2, 0.1, 0.1, 0.1, ...
         z += layer_height;
     }
+    
+    gcode.writeMove(offset / 2, travel_speed, 0.0);
 }
 
 void FlatPicture::generateLines(std::vector< std::vector< FlatPicture::PointWidth > >& black_lines, std::vector< std::vector< FlatPicture::PointWidth > >& white_lines)
 {
     assert(black_lines.empty());
-    for (coord_t x = 0; x < size.X; x += line_dist)
+    for (coord_t x = nominal_extrusion_width; x < size.X - nominal_extrusion_width / 2; x += line_dist)
     {
         black_lines.emplace_back();
         std::vector<PointWidth>& line = black_lines.back();
@@ -232,6 +281,44 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
         
     }
 }
+
+void FlatPicture::drawDenseFill(coord_t layer_height, float speed, bool transposed)
+{
+    bool swap = false;
+    for (coord_t x = nominal_extrusion_width / 2; x < size.X - nominal_extrusion_width / 2 + 10; x += dense_fill_line_width)
+    {
+	
+        coord_t y_min = 0;
+	coord_t y_max = size.Y;
+	Point start = (transposed)? Point(y_min, x) : Point(x, y_min);
+	Point end = (transposed)? Point(y_max, x) : Point(x, y_max);
+        if (swap) std::swap(start, end);
+	gcode.writeMove(offset + start, travel_speed, 0.0);
+	double extrusion_mm3_per_mm = INT2MM(dense_fill_line_width) * INT2MM(layer_height);
+	gcode.writeMove(offset + end, speed, extrusion_mm3_per_mm);
+        swap = !swap;
+	
+	
+    }
+
+}
+
+void FlatPicture::drawPoly(Polygons& perimeter, float speed, coord_t layer_height, coord_t width)
+{
+    for (PolygonRef poly : perimeter)
+    {
+        if (poly.size() == 0) continue;
+        Point start = poly.back();
+        gcode.writeMove(offset + start, travel_speed, 0.0); 
+        for (Point p : poly)
+        {
+            double extrusion_mm3_per_mm = INT2MM(width) * INT2MM(layer_height);
+            gcode.writeMove(offset + p, speed, extrusion_mm3_per_mm);
+        }
+    }
+    
+}
+
 
 
 
