@@ -78,7 +78,7 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
     gcode.writeCode(";EXTRUDER_TRAIN.1.MATERIAL.GUID:3ee70a86-77d8-4b87-8005-e4a1bc57d2ce");
     gcode.writeCode(";EXTRUDER_TRAIN.1.NOZZLE.DIAMETER:0.4");
     gcode.writeCode(";BUILD_PLATE.INITIAL_TEMPERATURE:60");
-    gcode.writeCode(";PRINT.TIME:2232");
+    gcode.writeCode(";PRINT.TIME:1234");
     gcode.writeCode(";PRINT.SIZE.MIN.X:118.537");
     gcode.writeCode(";PRINT.SIZE.MIN.Y:6");
     gcode.writeCode(";PRINT.SIZE.MIN.Z:0.27");
@@ -235,6 +235,10 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             if (width > nominal_extrusion_width)
             {
                 speed = nominal_speed - (nominal_speed - speed) * .5;
+            }
+            else
+            {
+                speed = nominal_speed + (speed - nominal_speed) * 1.5;
             }
             speed = std::min(speed, max_speed);
             
