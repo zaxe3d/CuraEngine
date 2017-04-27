@@ -232,14 +232,7 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             
             coord_t width = std::max(coord_t(1), (prev.width + next.width) / 2);
             double speed = nominal_speed * nominal_extrusion_width / width;
-            if (width > nominal_extrusion_width)
-            {
-                speed = nominal_speed - (nominal_speed - speed) * .5;
-            }
-            else
-            {
-                speed = nominal_speed + (speed - nominal_speed) * 1.5;
-            }
+//             speed = nominal_speed + (speed - nominal_speed) * 1.5;
             speed = std::min(speed, max_speed);
             
             double extrusion_mm3_per_mm = flow * INT2MM(width) * INT2MM(layer_height);
