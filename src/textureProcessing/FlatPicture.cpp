@@ -238,7 +238,7 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             }
             else
             {
-                speed = nominal_speed + (speed - nominal_speed) * 0.5;
+                speed = nominal_speed + (speed - nominal_speed) * 0.7;
             }
             speed = std::min(speed, max_speed);
             
