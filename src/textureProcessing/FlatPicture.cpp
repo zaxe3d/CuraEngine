@@ -164,6 +164,11 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
     
     gcode.writeRetraction(retraction_config, true);
     gcode.writeMove(offset + size * 2, travel_speed, 0.0);
+    
+    gcode.updateTotalPrintTime();
+    long print_time = gcode.getTotalPrintTime();
+    log("Print time: %d\n", print_time);
+    log("Print time (readable): %dh %dm %ds\n", print_time / 60 / 60, (print_time / 60) % 60, print_time % 60);
 }
 
 void FlatPicture::generateLines(std::vector< std::vector< FlatPicture::PointWidth > >& black_lines, std::vector< std::vector< FlatPicture::PointWidth > >& white_lines)
@@ -234,11 +239,11 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             double speed = nominal_speed * nominal_extrusion_width / width;
             if (speed > nominal_speed)
             {
-                speed = nominal_speed + (speed - nominal_speed) * 3.0;
+                speed = nominal_speed + (speed - nominal_speed) * speedup_ratio;
             }
             else
             {
-                speed = nominal_speed + (speed - nominal_speed) * 0.7;
+                speed = nominal_speed + (speed - nominal_speed) * slowdown_ratio;
             }
             speed = std::min(speed, max_speed);
             
@@ -281,7 +286,7 @@ void FlatPicture::drawPoly(Polygons& polys, float speed, coord_t layer_height, c
     {
         int best = 0;
         coord_t best_dist = 9999999;
-        for (int point_idx = 0; point_idx < poly.size(); point_idx++)
+        for (unsigned int point_idx = 0; point_idx < poly.size(); point_idx++)
         {
             coord_t dist = vSize(gcode.getPositionXY() - poly[point_idx]);
             if (dist < best_dist)
@@ -293,14 +298,14 @@ void FlatPicture::drawPoly(Polygons& polys, float speed, coord_t layer_height, c
         start_idices.push_back(best);
     }
     
-    for (int poly_idx = 0; poly_idx < polys.size(); poly_idx++)
+    for (unsigned int poly_idx = 0; poly_idx < polys.size(); poly_idx++)
     {
         PolygonRef poly = polys[poly_idx];
         int start_idx = start_idices[poly_idx];
         if (poly.size() == 0) continue;
         Point start = poly[(start_idx - 1 + poly.size()) % poly.size()];
         gcode.writeMove(offset + start, travel_speed, 0.0); 
-        for (int p_idx = 0; p_idx < poly.size(); p_idx++)
+        for (unsigned int p_idx = 0; p_idx < poly.size(); p_idx++)
         {
             Point p = poly[(start_idx + p_idx) % poly.size()]; 
             double extrusion_mm3_per_mm = INT2MM(width) * INT2MM(layer_height);
