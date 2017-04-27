@@ -234,7 +234,7 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             double speed = nominal_speed * nominal_extrusion_width / width;
             if (speed > nominal_speed)
             {
-                speed = nominal_speed + (speed - nominal_speed) * 5.0;
+                speed = nominal_speed + (speed - nominal_speed) * 3.0;
             }
             else
             {
