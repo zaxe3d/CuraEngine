@@ -163,7 +163,7 @@ FlatPicture::FlatPicture(const char* filename, const MeshGroup& meshgroup, GCode
     }
     
     gcode.writeRetraction(retraction_config, true);
-    gcode.writeMove(offset / 2, travel_speed, 0.0);
+    gcode.writeMove(offset + size * 2, travel_speed, 0.0);
 }
 
 void FlatPicture::generateLines(std::vector< std::vector< FlatPicture::PointWidth > >& black_lines, std::vector< std::vector< FlatPicture::PointWidth > >& white_lines)
