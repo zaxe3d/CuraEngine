@@ -31,7 +31,7 @@ public:
     coord_t nominal_extrusion_width = 350;
     double nominal_speed = 25;
     
-    double speedup_ratio = 0.95;
+    double speedup_ratio = 1.1;
     double slowdown_ratio = 1.4;
     
     double max_speed = 150;
