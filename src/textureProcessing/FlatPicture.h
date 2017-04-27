@@ -26,7 +26,7 @@ public:
     Point size = Point(MM2INT(35), MM2INT(35));
     Point offset = Point(MM2INT(50), MM2INT(50));
     coord_t line_dist = 700;
-    coord_t sample_dist = 300; // lower than 200 can already cause flooding in the firmware!!!
+    coord_t sample_dist = 200; // lower than 200 can already cause flooding in the firmware!!!
     
     coord_t nominal_extrusion_width = 350;
     double nominal_speed = 20;
