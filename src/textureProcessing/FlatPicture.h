@@ -31,7 +31,7 @@ public:
     coord_t nominal_extrusion_width = 350;
     double nominal_speed = 30;
     
-    double speedup_ratio = 1.2;
+    double speedup_ratio = 1.3;
     double slowdown_ratio = 1.4;
     
     double max_speed = 150;
@@ -41,7 +41,7 @@ public:
     double normal_speed = 40;
     coord_t dense_fill_line_width = 350;
     
-    double flow = 0.85;
+    double flow = 0.9;
     
     double travel_speed = nominal_speed;
     
