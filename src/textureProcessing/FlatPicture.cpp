@@ -180,7 +180,7 @@ void FlatPicture::generateLines(std::vector< std::vector< FlatPicture::PointWidt
         std::vector<PointWidth>& line = black_lines.back();
         for (coord_t y = 0; y < size.Y; y += sample_dist)
         {
-            coord_t width = line_dist * (1.0 - mat.getColor((float) x / (float) size.X, (float) y / (float) size.Y, ColourUsage::GREY));
+            coord_t width = line_dist * (1.0 - mat.getColor((float) y / (float) size.Y, (float) x / (float) size.X, ColourUsage::GREY));
             line.push_back(PointWidth{Point(x, y), width});
         }
     }
