@@ -29,9 +29,9 @@ public:
     coord_t sample_dist = 400; // lower than 300 can already cause flooding in the firmware!!!
     
     coord_t nominal_extrusion_width = 350;
-    double nominal_speed = 25;
+    double nominal_speed = 23;
     
-    double speedup_ratio = 1.1;
+    double speedup_ratio = 1.2;
     double slowdown_ratio = 1.4;
     
     double max_speed = 150;
