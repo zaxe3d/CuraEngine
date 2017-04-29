@@ -239,7 +239,7 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             coord_t extrusion_width;
             if (width < layer_height)
             {
-                extrusion_width = width;
+                extrusion_width = 10 * width * width * 0.78539; // 1/4 pi w / h
             }
             else
             {
