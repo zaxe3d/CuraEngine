@@ -256,7 +256,7 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             }
             speed = std::min(speed, max_speed);
             
-            double extrusion_mm3_per_mm = flow * INT2MM(width) * INT2MM(layer_height);
+            double extrusion_mm3_per_mm = flow * INT2MM(extrusion_width) * INT2MM(layer_height);
             log("generating point with width %f and speed %f\n", INT2MM(width), speed);
             
             gcode.writeMove(offset + ((transposed)? Point(next.location.Y, next.location.X) : next.location), speed, extrusion_mm3_per_mm);
