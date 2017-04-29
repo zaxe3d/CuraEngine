@@ -239,11 +239,11 @@ void FlatPicture::drawLines(const std::vector< std::vector< FlatPicture::PointWi
             coord_t extrusion_width;
             if (width < layer_height)
             {
-                extrusion_width = 10 * width * width * 0.78539; // 1/4 pi w / h
+                extrusion_width = width * width / layer_height * (0.25 * M_PI); // 1/4 pi w^2 / h
             }
             else
             {
-                extrusion_width = width - 21; // h *(4pi-1)
+                extrusion_width = width - layer_height * (1.0 - 0.25 * M_PI); // h * (1/4 pi - 1)
             }
             double speed = nominal_speed * nominal_extrusion_width / extrusion_width;
             if (speed > nominal_speed)
