@@ -36,6 +36,9 @@ void Infill::generate(Polygons& result_polygons, Polygons& result_lines, const S
     case EFillMethod::TETRAHEDRAL:
         generateTetrahedralInfill(result_lines);
         break;
+    case EFillMethod::SQUARE_TETRAHEDRAL:
+        generateSquareTetrahedralInfill(result_lines);
+        break;
     case EFillMethod::TRIANGLES:
         generateTriangleInfill(result_lines);
         break;
@@ -135,6 +138,15 @@ void Infill::generateTetrahedralInfill(Polygons& result)
     generateLineInfill(result, period, fill_angle, -shift);
     generateLineInfill(result, period, fill_angle + 90, shift);
     generateLineInfill(result, period, fill_angle + 90, -shift);
+}
+
+void Infill::generateSquareTetrahedralInfill(Polygons& result)
+{
+    generateTetrahedralInfill(result);
+    int period = one_over_sqrt_2 * 4 * line_distance;
+    coord_t shift = -this->shift + this->shift * one_over_sqrt_2 * 2 + period / 2;
+    generateLineInfill(result, period, fill_angle + 45, shift);
+    generateLineInfill(result, period, fill_angle + 135, shift);
 }
 
 void Infill::generateTriangleInfill(Polygons& result)
