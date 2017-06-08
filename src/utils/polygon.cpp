@@ -72,7 +72,7 @@ std::vector<Point> ConstPolygonRef::perimeterPoints(const coord_t spacing)
         const Point edge_end = me[vertex_index % size()];
         const Point edge = edge_end - edge_start;
         const coord_t edge_length = vSize(edge);
-        if (edge_length < remainder_distance)
+        if (edge_length <= remainder_distance)
         {
             remainder_distance -= edge_length;
             continue; //We can skip a whole lot of calculations this way, and prevent setting the start of the steps after the end of the edge.
