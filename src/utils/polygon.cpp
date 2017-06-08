@@ -65,7 +65,7 @@ std::vector<Point> ConstPolygonRef::perimeterPoints(const coord_t spacing) const
     result.reserve(polygonLength() / spacing + 1); //+1 because it might not be divisible by the spacing.
 
     coord_t remainder_distance = 0; //How much spacing we still have left to keep from the previous edge.
-    ConstPolygonRef& me = *this;
+    const ConstPolygonRef& me = *this;
     Point edge_start = me[0]; //Iterate over two consecutive points at a time.
     for (size_t vertex_index = 1; vertex_index <= size(); ++vertex_index) //Note that we're iterating one further than over all indices: To wrap around to the start.
     {
