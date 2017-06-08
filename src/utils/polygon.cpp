@@ -72,6 +72,11 @@ std::vector<Point> ConstPolygonRef::perimeterPoints(const coord_t spacing)
         const Point edge_end = me[vertex_index % size()];
         const Point edge = edge_end - edge_start;
         const coord_t edge_length = vSize(edge);
+        if (edge_length < remainder_distance)
+        {
+            remainder_distance -= edge_length;
+            continue; //We can skip a whole lot of calculations this way, and prevent setting the start of the steps after the end of the edge.
+        }
         const Point steps_start = edge_start + edge * remainder_distance / edge_length;
         const coord_t to_step_distance = vSize(edge_end - steps_start);
         const unsigned int number_of_steps = to_step_distance / spacing;
