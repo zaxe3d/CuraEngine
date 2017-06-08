@@ -71,14 +71,15 @@ std::vector<Point> ConstPolygonRef::perimeterPoints(const coord_t spacing)
     {
         const Point edge_end = me[vertex_index % size()];
         const Point edge = edge_end - edge_start;
-        const Point steps_start = edge_start + normal(edge, remainder_distance);
+        const coord_t edge_length = vSize(edge);
+        const Point steps_start = edge_start + edge * remainder_distance / edge_length;
         const coord_t to_step_distance = vSize(edge_end - steps_start);
         const unsigned int number_of_steps = to_step_distance / spacing;
         remainder_distance = to_step_distance - spacing * number_of_steps;
         //To prevent accumulating rounding errors, we find the point where we should end up after n steps.
         //Since the remainder is already known, we can do that by walking backwards this part of the last step.
         const coord_t last_step_size = spacing - remainder_distance;
-        const Point remainder = normal(edge, last_step_size); //Resize the edge vector to the size of the last step.
+        const Point remainder = edge * last_step_size / edge_length; //Resize the edge vector to the size of the last step.
         const Point steps_end = edge_end - remainder; //Position of the last step.
         //Knowing the full span of steps, we can interpolate using proper multiply-and-divide order to prevent rounding.
         Point steps = steps_end - steps_start; //The span covered by the steps on this edge.
