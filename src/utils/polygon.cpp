@@ -55,6 +55,44 @@ bool ConstPolygonRef::_inside(Point p, bool border_result) const
     return (crossings % 2) == 1;
 }
 
+std::vector<Point> ConstPolygonRef::perimeterPoints(const coord_t spacing)
+{
+    std::vector<Point> result;
+    if (size() == 0) //No edges.
+    {
+        return result;
+    }
+    result.reserve(polygonLength() / spacing + 1); //+1 because it might not be divisible by the spacing.
+
+    coord_t remainder_distance = 0; //How much spacing we still have left to keep from the previous edge.
+    ConstPolygonRef& me = *this;
+    Point edge_start = me[0]; //Iterate over two consecutive points at a time.
+    for (size_t vertex_index = 1; vertex_index <= size(); ++vertex_index) //Note that we're iterating one further than over all indices: To wrap around to the start.
+    {
+        const Point edge_end = me[vertex_index % size()];
+        const Point edge = edge_end - edge_start;
+        const Point steps_start = edge_start + normal(edge, remainder_distance);
+        const coord_t to_step_distance = vSize(edge_end - steps_start);
+        const unsigned int number_of_steps = to_step_distance / spacing;
+        remainder_distance = to_step_distance - spacing * number_of_steps;
+        //To prevent accumulating rounding errors, we find the point where we should end up after n steps.
+        //Since the remainder is already known, we can do that by walking backwards this part of the last step.
+        const coord_t last_step_size = spacing - remainder_distance;
+        const Point remainder = normal(edge, last_step_size); //Resize the edge vector to the size of the last step.
+        const Point steps_end = edge_end - remainder; //Position of the last step.
+        //Knowing the full span of steps, we can interpolate using proper multiply-and-divide order to prevent rounding.
+        Point steps = steps_end - steps_start; //The span covered by the steps on this edge.
+        for (unsigned int step = 0; step < number_of_steps; ++step)
+        {
+            const coord_t step_x = steps_start.X + step * steps.X / number_of_steps;
+            const coord_t step_y = steps_start.Y + step * steps.Y / number_of_steps;
+            result.emplace_back(step_x, step_y);
+        }
+        edge_start = edge_end; //Next two vertices.
+    }
+    return result;
+}
+
 bool Polygons::empty() const
 {
     return paths.empty();
@@ -87,6 +125,22 @@ unsigned int Polygons::pointCount() const
         count += path.size();
     }
     return count;
+}
+
+std::vector<Point> Polygons::perimeterPoints(const coord_t spacing)
+{
+    //Preventing resizes of the polygon makes getting a good estimate of the number of points we're making worth our while.
+    const coord_t total_length = polygonLength();
+    const coord_t estimated_point_count = total_length / spacing + paths.size(); //Also add one extra for each polygon, because the perimeter may not be divisible by the spacing.
+    std::vector<Point> result;
+    result.reserve(estimated_point_count);
+
+    for (std::vector<Point> polygon : paths)
+    {
+        std::vector<Point> polygon_perimeter_points = ConstPolygonRef(polygon).perimeterPoints(spacing);
+        result.insert(std::end(result), std::begin(polygon_perimeter_points), std::end(polygon_perimeter_points)); //Copy points into result.
+    }
+    return result;
 }
 
 bool Polygons::inside(Point p, bool border_result) const

@@ -230,6 +230,21 @@ public:
     }
 
     /*!
+     * \brief Creates a set of points along the perimeter of the polygon.
+     *
+     * The points are spaced evenly along the perimeter of the polygon. The
+     * first point is always on a vertex (though there is no guarantee which
+     * vertex). Next to this starting vertex on one side (no guarantees which)
+     * there will be a point that is spaced with less than the desired spacing
+     * if the total circumference of the polygon is not an exact multiple of the
+     * desired spacing.
+     *
+     * \param spacing The desired spacing between every two adjacent points.
+     * \return A vector of points along the perimeter of the polygon.
+     */
+    std::vector<Point> perimeterPoints(const coord_t spacing);
+
+    /*!
      * Smooth out small perpendicular segments and store the result in \p result.
      * Smoothing is performed by removing the inner most vertex of a line segment smaller than \p remove_length
      * which has an angle with the next and previous line segment smaller than roughly 150*
@@ -460,6 +475,21 @@ public:
      * \return `true` if the polygon has no points, or `false` if it does.
      */
     bool empty() const;
+
+    /*!
+     * \brief Creates a set of points along the perimeters of the polygons.
+     *
+     * The points are spaced evenly along the perimeter of each of the polygons.
+     * The first point is always on a vertex (though there is no guarantee which
+     * vertex). Next to this starting vertex on one side (no guarantees which)
+     * there will be a point that is spaced with less than the desired spacing
+     * if the total circumference of the polygon is not an exact multiple of the
+     * desired spacing.
+     *
+     * \param spacing The desired spacing between every two adjacent points.
+     * \return A vector of points along the perimeters of the polygons.
+     */
+    std::vector<Point> perimeterPoints(const coord_t spacing);
 
     unsigned int pointCount() const; //!< Return the amount of points in all polygons
 
