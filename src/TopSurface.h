@@ -53,6 +53,8 @@ public:
      * \param[out] layer The output g-code layer to put the resulting lines in.
      */
     bool sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, LayerPlan& layer);
+
+    bool sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer);
 };
 
 }

@@ -47,7 +47,7 @@ bool TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_
 
     //Add the lines as travel moves to the layer plan.
     bool added = false;
-    float sanding_flow = mesh.getSettingAsRatio("sanding_flow");
+    const float sanding_flow = mesh.getSettingAsRatio("sanding_flow");
     if (!sand_polygons.empty())
     {
         layer.addPolygonsByOptimizer(sand_polygons, &line_config, nullptr, EZSeamType::SHORTEST, Point(0, 0), 0, false, sanding_flow);
@@ -59,6 +59,28 @@ bool TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_
         added = true;
     }
     return added;
+}
+
+bool TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer)
+{
+    Polygons sand_lines; //The resulting lines we're computing here.
+
+    const coord_t line_spacing = mesh.getSettingInMicrons("sanding_line_spacing");
+    std::vector<Point> below_perimeter_points = top_surface_below.areas.perimeterPoints(line_spacing);
+    for (Point low_point : below_perimeter_points)
+    {
+        const Point high_point = PolygonUtils::moveInside(areas, low_point, 0); //Move to the edge of the polygon.
+        std::vector<Point> line = {low_point, high_point};
+        sand_lines.add(ConstPolygonRef(line));
+    }
+
+    if (sand_lines.empty())
+    {
+        return false;
+    }
+    const float sanding_flow = mesh.getSettingAsRatio("sanding_flow");
+    layer.addLinesByOptimizer(sand_lines, &line_config, SpaceFillType::Lines, 0, sanding_flow);
+    return true;
 }
 
 }
