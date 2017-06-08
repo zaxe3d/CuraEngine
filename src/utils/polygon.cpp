@@ -55,7 +55,7 @@ bool ConstPolygonRef::_inside(Point p, bool border_result) const
     return (crossings % 2) == 1;
 }
 
-std::vector<Point> ConstPolygonRef::perimeterPoints(const coord_t spacing)
+std::vector<Point> ConstPolygonRef::perimeterPoints(const coord_t spacing) const
 {
     std::vector<Point> result;
     if (size() == 0) //No edges.
@@ -133,7 +133,7 @@ unsigned int Polygons::pointCount() const
     return count;
 }
 
-std::vector<Point> Polygons::perimeterPoints(const coord_t spacing)
+std::vector<Point> Polygons::perimeterPoints(const coord_t spacing) const
 {
     //Preventing resizes of the polygon makes getting a good estimate of the number of points we're making worth our while.
     const coord_t total_length = polygonLength();

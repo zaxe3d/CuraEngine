@@ -242,7 +242,7 @@ public:
      * \param spacing The desired spacing between every two adjacent points.
      * \return A vector of points along the perimeter of the polygon.
      */
-    std::vector<Point> perimeterPoints(const coord_t spacing);
+    std::vector<Point> perimeterPoints(const coord_t spacing) const;
 
     /*!
      * Smooth out small perpendicular segments and store the result in \p result.
@@ -489,7 +489,7 @@ public:
      * \param spacing The desired spacing between every two adjacent points.
      * \return A vector of points along the perimeters of the polygons.
      */
-    std::vector<Point> perimeterPoints(const coord_t spacing);
+    std::vector<Point> perimeterPoints(const coord_t spacing) const;
 
     unsigned int pointCount() const; //!< Return the amount of points in all polygons
 
