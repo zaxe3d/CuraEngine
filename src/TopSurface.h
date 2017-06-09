@@ -68,7 +68,7 @@ public:
      * \param top_surface_below The top surface of the layer below this layer.
      * \param[out] layer The output g-code layer to put the resulting lines in.
      */
-    bool sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer);
+    void sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer);
 };
 
 }

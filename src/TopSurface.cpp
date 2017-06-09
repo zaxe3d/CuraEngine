@@ -57,7 +57,7 @@ void TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_
     }
 }
 
-bool TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer)
+void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer)
 {
     Polygons sand_lines; //The resulting lines we're computing here.
 
@@ -72,11 +72,10 @@ bool TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
 
     if (sand_lines.empty())
     {
-        return false;
+        return;
     }
     const float sanding_flow = mesh.getSettingAsRatio("sanding_flow");
     layer.addLinesByOptimizer(sand_lines, &line_config, SpaceFillType::Lines, 0, sanding_flow);
-    return true;
 }
 
 }
