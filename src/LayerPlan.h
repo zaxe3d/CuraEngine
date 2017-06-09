@@ -440,6 +440,24 @@ public:
     void addExtrusionMove(Point p, const GCodePathConfig* config, SpaceFillType space_fill_type, float flow = 1.0, bool spiralize = false);
 
     /*!
+     * \brief Add an extrusion move to a certain 3-dimensional point.
+     *
+     * The flow could be different than the one in the \p config.
+     *
+     * \param target The point to extrude to.
+     * \param config The line configuration with which to extrude.
+     * \param space_fill_type Of what space filling type this extrusion move is
+     * a part.
+     * \param flow A modifier of the extrusion width which would follow from the
+     * \p config.
+     * \param spiralize Whether to gradually increase the Z while printing. This
+     * additional Z is added on top of the actual Z coordinate of the vertex.
+     * Note that this path may be part of a sequence of spiralised paths,
+     * forming one polygon.
+     */
+    void addExtrusionMove3D(Point3 target, const GCodePathConfig* config, SpaceFillType space_fill_type, float flow = 1.0, bool spiralize = false);
+
+    /*!
      * Add polygon to the gcode starting at vertex \p startIdx
      * \param polygon The polygon
      * \param startIdx The index of the starting vertex of the \p polygon

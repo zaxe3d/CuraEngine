@@ -386,6 +386,12 @@ void LayerPlan::addExtrusionMove(Point p, const GCodePathConfig* config, SpaceFi
     last_planned_position = p;
 }
 
+void LayerPlan::addExtrusionMove3D(Point3 target, const GCodePathConfig* config, SpaceFillType space_fill_type, float flow, bool spiralize)
+{
+    getLatestPathWithConfig(config, space_fill_type, flow, spiralize)->points.push_back(target);
+    last_planned_position = Point(target.x, target.y);
+}
+
 void LayerPlan::addPolygon(ConstPolygonRef polygon, int start_idx, const GCodePathConfig* config, WallOverlapComputation* wall_overlap_computation, coord_t wall_0_wipe_dist, bool spiralize, float flow_ratio, bool always_retract)
 {
     Point p0 = polygon[start_idx];
