@@ -65,7 +65,8 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
     std::vector<Point> below_perimeter_points = top_surface_below.areas.perimeterPoints(line_spacing);
     for (Point low_point : below_perimeter_points)
     {
-        const Point high_point = PolygonUtils::moveInside(areas, low_point, 0); //Move to the edge of the polygon.
+        Point high_point(low_point);
+        PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
         std::vector<Point> line = {low_point, high_point};
         sand_lines.add(ConstPolygonRef(line));
     }
