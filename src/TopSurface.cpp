@@ -59,24 +59,17 @@ void TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_
 
 void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer)
 {
-    Polygons sand_lines; //The resulting lines we're computing here.
-
     const coord_t line_spacing = mesh.getSettingInMicrons("sanding_line_spacing");
+    const float sanding_flow = mesh.getSettingAsRatio("sanding_flow");
+
     std::vector<Point> below_perimeter_points = top_surface_below.areas.perimeterPoints(line_spacing);
     for (Point low_point : below_perimeter_points)
     {
         Point high_point(low_point);
         PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
-        std::vector<Point> line = {low_point, high_point};
-        sand_lines.add(ConstPolygonRef(line));
+        layer.addTravel(low_point);
+        layer.addExtrusionMove(high_point, &line_config, SpaceFillType::Lines, sanding_flow);
     }
-
-    if (sand_lines.empty())
-    {
-        return;
-    }
-    const float sanding_flow = mesh.getSettingAsRatio("sanding_flow");
-    layer.addLinesByOptimizer(sand_lines, &line_config, SpaceFillType::Lines, 0, sanding_flow);
 }
 
 }
