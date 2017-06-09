@@ -1029,6 +1029,7 @@ void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const 
     {
         addMeshOpenPolyLinesToGCode(mesh, mesh_config, gcode_layer, layer_nr);
     }
+    processSanding(mesh, *layer, mesh_config.sanding_config, gcode_layer);
 }
 
 void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const int extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, LayerPlan& gcode_layer, int layer_nr) const
@@ -1071,7 +1072,6 @@ void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage& storage, const S
 
     int64_t skin_overlap = mesh.getSettingInMicrons("skin_overlap_mm");
     added_something = added_something | processSkinAndPerimeterGaps(storage, gcode_layer, mesh, extruder_nr, mesh_config, part, layer_nr, skin_overlap, skin_angle);
-    added_something |= processSanding(mesh, part, mesh_config.sanding_config, gcode_layer);
 
     //After a layer part, make sure the nozzle is inside the comb boundary, so we do not retract on the perimeter.
     if (added_something && (!getSettingBoolean("magic_spiralize") || static_cast<int>(layer_nr) < mesh.getSettingAsCount("bottom_layers")))
@@ -1529,12 +1529,12 @@ bool FffGcodeWriter::processSkinPart(const SliceDataStorage& storage, LayerPlan&
     return added_something;
 }
 
-bool FffGcodeWriter::processSanding(const SliceMeshStorage& mesh, const SliceLayerPart& part, const GCodePathConfig& line_config, LayerPlan& gcode_layer) const
+bool FffGcodeWriter::processSanding(const SliceMeshStorage& mesh, const SliceLayer& slice_layer, const GCodePathConfig& line_config, LayerPlan& gcode_layer) const
 {
     bool added_something = false;
-    if (part.top_surface)
+    if (slice_layer.top_surface)
     {
-        added_something |= part.top_surface->sand(mesh, line_config, gcode_layer);
+        added_something |= slice_layer.top_surface->sand(mesh, line_config, gcode_layer);
     }
     return added_something;
 }
