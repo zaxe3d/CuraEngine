@@ -172,6 +172,12 @@ INLINE int64_t vSize2(const Point& p0)
 {
     return p0.X*p0.X+p0.Y*p0.Y;
 }
+
+INLINE int64_t vSize2(const Point3& vector)
+{
+    return vector.x * vector.x + vector.y * vector.y + vector.z * vector.z;
+}
+
 INLINE float vSize2f(const Point& p0)
 {
     return float(p0.X)*float(p0.X)+float(p0.Y)*float(p0.Y);
@@ -184,6 +190,23 @@ INLINE bool shorterThen(const Point& p0, int32_t len)
     if (p0.Y > len || p0.Y < -len)
         return false;
     return vSize2(p0) <= len*len;
+}
+
+INLINE bool shorterThen(const Point3& vector, int32_t length)
+{
+    if (vector.x > length || vector.x < -length)
+    {
+        return false;
+    }
+    if (vector.y > length || vector.y < -length)
+    {
+        return false;
+    }
+    if (vector.z > length || vector.z < -length)
+    {
+        return false;
+    }
+    return vSize2(vector) <= length * length;
 }
 
 INLINE int64_t vSize(const Point& p0)

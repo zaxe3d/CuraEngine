@@ -90,10 +90,14 @@ bool MergeInfillLines::isConvertible(unsigned int path_idx_first_move, Point& fi
 
     int64_t line_width = paths[idx+1].config->getLineWidth();
     
-    Point& a = paths[idx+0].points.back(); // first extruded line from
-    Point& b = paths[idx+1].points.back(); // first extruded line to
-    Point& c = paths[idx+2].points.back(); // second extruded line from
-    Point& d = paths[idx+3].points.back(); // second extruded line to
+    const Point3& a3 = paths[idx + 0].points.back(); // first extruded line from
+    const Point a(a3.x, a3.y);
+    const Point3& b3 = paths[idx + 1].points.back(); // first extruded line to
+    const Point b(b3.x, b3.y);
+    const Point3& c3 = paths[idx + 2].points.back(); // second extruded line from
+    const Point c(c3.x, c3.y);
+    const Point3& d3 = paths[idx + 3].points.back(); // second extruded line to
+    const Point d(d3.x, d3.y);
     
     return isConvertible(a, b, c, d, line_width, first_middle, second_middle, resulting_line_width, use_second_middle_as_first);
 }

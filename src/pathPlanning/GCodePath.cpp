@@ -15,7 +15,7 @@ spiralize(spiralize)
     retract = false;
     perform_z_hop = false;
     perform_prime = false;
-    points = std::vector<Point>();
+    points = std::vector<Point3>();
     done = false;
     estimates = TimeMaterialEstimates();
 }
