@@ -1029,7 +1029,12 @@ void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const 
     {
         addMeshOpenPolyLinesToGCode(mesh, mesh_config, gcode_layer, layer_nr);
     }
-    processSanding(mesh, layer, mesh_config.sanding_config, gcode_layer);
+    const SliceLayer* layer_below = nullptr;
+    if (layer_nr > 0)
+    {
+        layer_below = &mesh.layers[layer_nr - 1];
+    }
+    processSanding(mesh, layer, mesh_config.sanding_config, gcode_layer, layer_below);
 }
 
 void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const int extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, LayerPlan& gcode_layer, int layer_nr) const
@@ -1529,11 +1534,15 @@ bool FffGcodeWriter::processSkinPart(const SliceDataStorage& storage, LayerPlan&
     return added_something;
 }
 
-void FffGcodeWriter::processSanding(const SliceMeshStorage& mesh, const SliceLayer& slice_layer, const GCodePathConfig& line_config, LayerPlan& gcode_layer) const
+void FffGcodeWriter::processSanding(const SliceMeshStorage& mesh, const SliceLayer& slice_layer, const GCodePathConfig& line_config, LayerPlan& gcode_layer, const SliceLayer* slice_layer_below) const
 {
     if (slice_layer.top_surface)
     {
-        slice_layer.top_surface->sand(mesh, line_config, gcode_layer);
+        //slice_layer.top_surface->sand(mesh, line_config, gcode_layer);
+        if (slice_layer_below && slice_layer_below->top_surface)
+        {
+            slice_layer.top_surface->sandBelow(mesh, line_config, *slice_layer_below->top_surface, gcode_layer);
+        }
     }
 }
 
