@@ -30,7 +30,7 @@ public:
      * \param mesh The mesh to generate the top surface area for.
      * \param layer_number The layer to generate the top surface area for.
      */
-    TopSurface(SliceMeshStorage& mesh, size_t layer_number);
+    TopSurface(const SliceMeshStorage& mesh, const size_t layer_number);
 
     /*!
      * \brief The areas of top surface, for each layer.

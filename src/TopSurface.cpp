@@ -13,7 +13,7 @@ TopSurface::TopSurface()
     //Do nothing. Areas stays empty.
 }
 
-TopSurface::TopSurface(SliceMeshStorage& mesh, size_t layer_number)
+TopSurface::TopSurface(const SliceMeshStorage& mesh, const size_t layer_number)
 {
     //The top surface is all parts of the mesh where there's no mesh above it, so find the layer above it first.
     Polygons mesh_above;
