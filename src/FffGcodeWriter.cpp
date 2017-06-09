@@ -1000,9 +1000,9 @@ void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const 
         return;
     }
 
-    const SliceLayer* layer = &mesh.layers[layer_nr];
+    const SliceLayer& layer = mesh.layers[layer_nr];
 
-    if (layer->parts.size() == 0)
+    if (layer.parts.size() == 0)
     {
         return;
     }
@@ -1014,22 +1014,22 @@ void FffGcodeWriter::addMeshLayerToGCode(const SliceDataStorage& storage, const 
     Point z_seam_pos(mesh.getSettingInMicrons("z_seam_x"), mesh.getSettingInMicrons("z_seam_y"));
     Point layer_start_position = Point(train->getSettingInMicrons("layer_start_x"), train->getSettingInMicrons("layer_start_y"));
     PathOrderOptimizer part_order_optimizer(layer_start_position, z_seam_pos, z_seam_type);
-    for(unsigned int partNr=0; partNr<layer->parts.size(); partNr++)
+    for(unsigned int partNr=0; partNr<layer.parts.size(); partNr++)
     {
-        part_order_optimizer.addPolygon(layer->parts[partNr].insets[0][0]);
+        part_order_optimizer.addPolygon(layer.parts[partNr].insets[0][0]);
     }
     part_order_optimizer.optimize();
 
     for (int part_idx : part_order_optimizer.polyOrder)
     {
-        const SliceLayerPart& part = layer->parts[part_idx];
+        const SliceLayerPart& part = layer.parts[part_idx];
         addMeshPartToGCode(storage, mesh, extruder_nr, mesh_config, part, gcode_layer, layer_nr);
     }
     if (mesh.getSettingAsSurfaceMode("magic_mesh_surface_mode") != ESurfaceMode::NORMAL && extruder_nr == mesh.getSettingAsExtruderNr("wall_0_extruder_nr"))
     {
         addMeshOpenPolyLinesToGCode(mesh, mesh_config, gcode_layer, layer_nr);
     }
-    processSanding(mesh, *layer, mesh_config.sanding_config, gcode_layer);
+    processSanding(mesh, layer, mesh_config.sanding_config, gcode_layer);
 }
 
 void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage& storage, const SliceMeshStorage& mesh, const int extruder_nr, const PathConfigStorage::MeshPathConfigs& mesh_config, const SliceLayerPart& part, LayerPlan& gcode_layer, int layer_nr) const
