@@ -26,11 +26,11 @@ TopSurface::TopSurface(SliceMeshStorage& mesh, size_t layer_number)
     areas = mesh_this.difference(mesh_above);
 }
 
-bool TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, LayerPlan& layer)
+void TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, LayerPlan& layer)
 {
     if (areas.empty())
     {
-        return false; //Nothing to do.
+        return; //Nothing to do.
     }
     //Generate the lines to cover the surface.
     const EFillMethod pattern = mesh.getSettingAsFillMethod("sanding_pattern");
@@ -46,19 +46,15 @@ bool TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_
     infill_generator.generate(sand_polygons, sand_lines);
 
     //Add the lines as travel moves to the layer plan.
-    bool added = false;
     const float sanding_flow = mesh.getSettingAsRatio("sanding_flow");
     if (!sand_polygons.empty())
     {
         layer.addPolygonsByOptimizer(sand_polygons, &line_config, nullptr, EZSeamType::SHORTEST, Point(0, 0), 0, false, sanding_flow);
-        added = true;
     }
     if (!sand_lines.empty())
     {
         layer.addLinesByOptimizer(sand_lines, &line_config, SpaceFillType::PolyLines, 0, sanding_flow);
-        added = true;
     }
-    return added;
 }
 
 bool TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer)

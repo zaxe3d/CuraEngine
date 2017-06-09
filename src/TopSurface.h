@@ -50,7 +50,7 @@ public:
      * that the flow might still get adjusted by the sanding settings.
      * \param[out] layer The output g-code layer to put the resulting lines in.
      */
-    bool sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, LayerPlan& layer);
+    void sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, LayerPlan& layer);
 
     /*!
      * \brief Generate paths for sanding between a lower layer and this one.

@@ -491,9 +491,8 @@ private:
      * \param line_config The configuration of the lines to draw the sanding
      * with.
      * \param[out] gcode_layer The output layer to put the resulting paths in.
-     * \return Whether this function added anything to the layer plan.
      */
-    bool processSanding(const SliceMeshStorage& mesh, const SliceLayer& slice_layer, const GCodePathConfig& line_config, LayerPlan& gcode_layer) const;
+    void processSanding(const SliceMeshStorage& mesh, const SliceLayer& slice_layer, const GCodePathConfig& line_config, LayerPlan& gcode_layer) const;
 
     /*!
      * Add the support to the layer plan \p gcodeLayer of the current layer for all support parts with the given \p extruder_nr.

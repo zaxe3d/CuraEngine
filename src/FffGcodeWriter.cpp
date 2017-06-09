@@ -1529,14 +1529,12 @@ bool FffGcodeWriter::processSkinPart(const SliceDataStorage& storage, LayerPlan&
     return added_something;
 }
 
-bool FffGcodeWriter::processSanding(const SliceMeshStorage& mesh, const SliceLayer& slice_layer, const GCodePathConfig& line_config, LayerPlan& gcode_layer) const
+void FffGcodeWriter::processSanding(const SliceMeshStorage& mesh, const SliceLayer& slice_layer, const GCodePathConfig& line_config, LayerPlan& gcode_layer) const
 {
-    bool added_something = false;
     if (slice_layer.top_surface)
     {
-        added_something |= slice_layer.top_surface->sand(mesh, line_config, gcode_layer);
+        slice_layer.top_surface->sand(mesh, line_config, gcode_layer);
     }
-    return added_something;
 }
 
 bool FffGcodeWriter::addSupportToGCode(const SliceDataStorage& storage, LayerPlan& gcode_layer, int layer_nr, int extruder_nr) const
