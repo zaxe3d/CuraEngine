@@ -386,7 +386,7 @@ void LayerPlan::addExtrusionMove(Point p, const GCodePathConfig* config, SpaceFi
     last_planned_position = p;
 }
 
-void LayerPlan::addExtrusionMove3D(Point3 target, const GCodePathConfig* config, SpaceFillType space_fill_type, float flow, bool spiralize)
+void LayerPlan::addExtrusionMove(Point3 target, const GCodePathConfig* config, SpaceFillType space_fill_type, float flow, bool spiralize)
 {
     getLatestPathWithConfig(config, space_fill_type, flow, spiralize)->points.push_back(target);
     last_planned_position = Point(target.x, target.y);

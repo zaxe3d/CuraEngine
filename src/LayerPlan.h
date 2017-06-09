@@ -455,7 +455,7 @@ public:
      * Note that this path may be part of a sequence of spiralised paths,
      * forming one polygon.
      */
-    void addExtrusionMove3D(Point3 target, const GCodePathConfig* config, SpaceFillType space_fill_type, float flow = 1.0, bool spiralize = false);
+    void addExtrusionMove(Point3 target, const GCodePathConfig* config, SpaceFillType space_fill_type, float flow = 1.0, bool spiralize = false);
 
     /*!
      * Add polygon to the gcode starting at vertex \p startIdx
