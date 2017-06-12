@@ -76,27 +76,36 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
     const coord_t minimum_sand_distance = (to_height - from_height) / tan(nozzle_angle);
     const coord_t minimum_sand_distance2 = minimum_sand_distance * minimum_sand_distance;
 
-    std::vector<Point> low_perimeter_points = top_surface_below.areas.perimeterPoints(line_spacing);
-    if (low_perimeter_points.empty())
+    std::vector<Point> initial_low_perimeter_points = top_surface_below.areas.perimeterPoints(line_spacing);
+    if (initial_low_perimeter_points.empty())
     {
         return;
     }
-    const Point first_low_point = low_perimeter_points[0];
+    const Point first_low_point = initial_low_perimeter_points[0];
+
+    std::vector<Point3> low_perimeter_points; //Some points get filtered out, so create a new version without those.
+    std::vector<Point3> high_perimeter_points;
+    for (Point low_point : initial_low_perimeter_points)
+    {
+        Point high_point(low_point);
+        PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
+        if (vSize2(high_point - low_point) < minimum_sand_distance2) //Nozzle angle doesn't allow us to move like this.
+        {
+            continue;
+        }
+        const Point3 low_point3(low_point.X, low_point.Y, top_surface_below.from_height);
+        const Point3 high_point3(high_point.X, high_point.Y, layer.z);
+        low_perimeter_points.push_back(low_point3);
+        high_perimeter_points.push_back(high_point3);
+    }
+
     for (unsigned int pass = 0; pass < number_of_passes; ++pass)
     {
         layer.addTravel_simple(first_low_point); //Move above the first point so we don't collide with our model when doing the initial travel move.
-        for (Point low_point : low_perimeter_points)
+        for (size_t point_index = 0; point_index < low_perimeter_points.size(); ++point_index)
         {
-            Point high_point(low_point);
-            PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
-            if (vSize2(high_point - low_point) < minimum_sand_distance2) //Nozzle angle doesn't allow us to move like this.
-            {
-                continue;
-            }
-            const Point3 high_point3(high_point.X, high_point.Y, layer.z);
-            const Point3 low_point3(low_point.X, low_point.Y, top_surface_below.from_height);
-            layer.addTravel_simple(low_point3);
-            layer.addExtrusionMove(high_point3, &line_config, SpaceFillType::Lines, sanding_flow);
+            layer.addTravel_simple(low_perimeter_points[point_index]);
+            layer.addExtrusionMove(high_perimeter_points[point_index], &line_config, SpaceFillType::Lines, sanding_flow);
         }
     }
 }
