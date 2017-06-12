@@ -422,6 +422,17 @@ public:
     GCodePath& addTravel_simple(Point p, GCodePath* path = nullptr);
 
     /*!
+     * \brief Add a 3-dimensional travel path to a certain point and retract if
+     * needed.
+     *
+     * No combing is performed.
+     * \param target The point to travel to.
+     * \param path The travel path to which to add the point \p target. If none
+     * is provided, the latest travel path will be appended to.
+     */
+    GCodePath& addTravel_simple(Point3 target, GCodePath* path = nullptr);
+
+    /*!
      * Plan a prime blob at the current location.
      * 
      * \warning A nonretracted move is introduced so that the LayerPlanBuffer classifies this move as an extrusion move.

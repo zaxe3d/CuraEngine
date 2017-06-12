@@ -77,9 +77,9 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
     {
         Point high_point(low_point);
         PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
-        layer.addTravel(low_point);
         const Point3 high_point3(high_point.X, high_point.Y, layer.z);
         const Point3 low_point3(low_point.X, low_point.Y, top_surface_below.from_height);
+        layer.addTravel_simple(low_point3);
         layer.addExtrusionMove(high_point3, &line_config, SpaceFillType::Lines, sanding_flow);
     }
 }

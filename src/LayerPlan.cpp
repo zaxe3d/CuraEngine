@@ -370,6 +370,24 @@ GCodePath& LayerPlan::addTravel_simple(Point p, GCodePath* path)
     return *path;
 }
 
+GCodePath& LayerPlan::addTravel_simple(Point3 target, GCodePath* path)
+{
+    const Point target2 = Point(target.x, target.y);
+    bool is_first_travel_of_layer = !static_cast<bool>(last_planned_position);
+    if (is_first_travel_of_layer)
+    {
+        first_travel_destination = target2;
+        first_travel_destination_is_inside = is_inside;
+    }
+    if (path == nullptr)
+    {
+        path = getLatestPathWithConfig(&configs_storage.travel_config_per_extruder[getExtruder()], SpaceFillType::None);
+    }
+    path->points.push_back(target);
+    last_planned_position = target2;
+    return *path;
+}
+
 void LayerPlan::planPrime()
 {
     forceNewPathStart();
