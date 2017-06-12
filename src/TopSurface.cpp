@@ -71,16 +71,26 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
 {
     const coord_t line_spacing = mesh.getSettingInMicrons("sanding_line_spacing");
     const float sanding_flow = mesh.getSettingAsRatio("sanding_flow");
+    const unsigned int number_of_passes = mesh.getSettingAsCount("sanding_passes");
 
     std::vector<Point> below_perimeter_points = top_surface_below.areas.perimeterPoints(line_spacing);
-    for (Point low_point : below_perimeter_points)
+    if (below_perimeter_points.empty())
     {
-        Point high_point(low_point);
-        PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
-        const Point3 high_point3(high_point.X, high_point.Y, layer.z);
-        const Point3 low_point3(low_point.X, low_point.Y, top_surface_below.from_height);
-        layer.addTravel_simple(low_point3);
-        layer.addExtrusionMove(high_point3, &line_config, SpaceFillType::Lines, sanding_flow);
+        return;
+    }
+    const Point first_low_point = below_perimeter_points[0];
+    for (unsigned int pass = 0; pass < number_of_passes; ++pass)
+    {
+        layer.addTravel_simple(first_low_point); //Move above the first point so we don't collide with our model when doing the initial travel move.
+        for (Point low_point : below_perimeter_points)
+        {
+            Point high_point(low_point);
+            PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
+            const Point3 high_point3(high_point.X, high_point.Y, layer.z);
+            const Point3 low_point3(low_point.X, low_point.Y, top_surface_below.from_height);
+            layer.addTravel_simple(low_point3);
+            layer.addExtrusionMove(high_point3, &line_config, SpaceFillType::Lines, sanding_flow);
+        }
     }
 }
 
