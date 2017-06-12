@@ -77,7 +77,6 @@ void TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_
 void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer)
 {
     const coord_t line_spacing = mesh.getSettingInMicrons("sanding_line_spacing");
-    const double sanding_flow = mesh.getSettingAsRatio("sanding_flow");
     const unsigned int number_of_passes = mesh.getSettingAsCount("sanding_passes");
     const double nozzle_angle = mesh.getSettingInAngleRadians("machine_nozzle_expansion_angle");
     const coord_t minimum_sand_distance = (to_height - from_height) / tan(nozzle_angle);
