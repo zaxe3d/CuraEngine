@@ -24,6 +24,16 @@ TopSurface::TopSurface(const SliceMeshStorage& mesh, const size_t layer_number)
 
     Polygons mesh_this = mesh.layers[layer_number].getOutlines();
     areas = mesh_this.difference(mesh_above);
+    to_height = mesh.layers[layer_number].printZ;
+    from_height = to_height;
+    if (layer_number == 0)
+    {
+        from_height -= mesh.getSettingInMicrons("layer_height_0");
+    }
+    else
+    {
+        from_height -= mesh.getSettingInMicrons("layer_height");
+    }
 }
 
 void TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, LayerPlan& layer)
@@ -68,7 +78,9 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
         Point high_point(low_point);
         PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
         layer.addTravel(low_point);
-        layer.addExtrusionMove(high_point, &line_config, SpaceFillType::Lines, sanding_flow);
+        const Point3 high_point3(high_point.X, high_point.Y, layer.z);
+        const Point3 low_point3(low_point.X, low_point.Y, top_surface_below.from_height);
+        layer.addExtrusionMove(high_point3, &line_config, SpaceFillType::Lines, sanding_flow);
     }
 }
 

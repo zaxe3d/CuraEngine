@@ -38,6 +38,16 @@ public:
     Polygons areas;
 
     /*!
+     * \brief The height of the bottom of this layer.
+     */
+    coord_t from_height;
+
+    /*!
+     * \brief The height of the top of this layer.
+     */
+    coord_t to_height;
+
+    /*!
      * \brief Generate paths for sanding over the top surface.
      *
      * This generates an infill pattern over the top surface that is supposed to
