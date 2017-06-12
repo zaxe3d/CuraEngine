@@ -85,12 +85,14 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
 
     std::vector<Point3> low_perimeter_points; //Some points get filtered out, so create a new version without those.
     std::vector<Point3> high_perimeter_points;
+    bool draw_diagonals = false;
     for (Point low_point : initial_low_perimeter_points)
     {
         Point high_point(low_point);
         PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
         if (vSize2(high_point - low_point) < minimum_sand_distance2) //Nozzle angle doesn't allow us to move like this.
         {
+            draw_diagonals = true; //Only draw diagonal sanding lines if the top surface is adjacent to the surface below.
             continue;
         }
         const Point3 low_point3(low_point.X, low_point.Y, top_surface_below.from_height);
@@ -99,14 +101,21 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
         high_perimeter_points.push_back(high_point3);
     }
 
-    for (unsigned int pass = 0; pass < number_of_passes; ++pass)
+    if (draw_diagonals)
     {
-        layer.addTravel_simple(first_low_point); //Move above the first point so we don't collide with our model when doing the initial travel move.
-        for (size_t point_index = 0; point_index < low_perimeter_points.size(); ++point_index)
+        for (unsigned int pass = 0; pass < number_of_passes; ++pass)
         {
-            layer.addTravel_simple(low_perimeter_points[point_index]);
-            layer.addExtrusionMove(high_perimeter_points[point_index], &line_config, SpaceFillType::Lines, sanding_flow);
+            layer.addTravel_simple(first_low_point); //Move above the first point so we don't collide with our model when doing the initial travel move.
+            for (size_t point_index = 0; point_index < low_perimeter_points.size(); ++point_index)
+            {
+                layer.addTravel_simple(low_perimeter_points[point_index]);
+                layer.addExtrusionMove(high_perimeter_points[point_index], &line_config, SpaceFillType::Lines, sanding_flow);
+            }
         }
+    }
+    else //This is a local peak.
+    {
+        sand(mesh, line_config, layer);
     }
 }
 
