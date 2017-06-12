@@ -353,7 +353,7 @@ GCodePath& LayerPlan::addTravel(Point p, bool force_comb_retract)
     return ret;
 }
 
-GCodePath& LayerPlan::addTravel_simple(Point p, GCodePath* path)
+GCodePath& LayerPlan::addTravel_simple(Point p, GCodePath* path, bool force_retract)
 {
     bool is_first_travel_of_layer = !static_cast<bool>(last_planned_position);
     if (is_first_travel_of_layer)
@@ -367,10 +367,14 @@ GCodePath& LayerPlan::addTravel_simple(Point p, GCodePath* path)
     }
     path->points.push_back(Point3(p.X, p.Y, z));
     last_planned_position = p;
+    if (force_retract)
+    {
+        path->retract = true;
+    }
     return *path;
 }
 
-GCodePath& LayerPlan::addTravel_simple(Point3 target, GCodePath* path)
+GCodePath& LayerPlan::addTravel_simple(Point3 target, GCodePath* path, bool force_retract)
 {
     const Point target2 = Point(target.x, target.y);
     bool is_first_travel_of_layer = !static_cast<bool>(last_planned_position);
@@ -385,6 +389,10 @@ GCodePath& LayerPlan::addTravel_simple(Point3 target, GCodePath* path)
     }
     path->points.push_back(target);
     last_planned_position = target2;
+    if (force_retract)
+    {
+        path->retract = true;
+    }
     return *path;
 }
 

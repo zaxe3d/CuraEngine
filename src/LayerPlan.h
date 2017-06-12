@@ -418,8 +418,10 @@ public:
      * 
      * \param p The point to travel to
      * \param path (optional) The travel path to which to add the point \p p
+     * \param force_retract Whether the travel move and all adjacent travel
+     * moves need to be retracted.
      */
-    GCodePath& addTravel_simple(Point p, GCodePath* path = nullptr);
+    GCodePath& addTravel_simple(Point p, GCodePath* path = nullptr, bool force_retract = false);
 
     /*!
      * \brief Add a 3-dimensional travel path to a certain point and retract if
@@ -429,8 +431,10 @@ public:
      * \param target The point to travel to.
      * \param path The travel path to which to add the point \p target. If none
      * is provided, the latest travel path will be appended to.
+     * \param force_retract Whether the travel move and all adjacent travel
+     * moves need to be retracted.
      */
-    GCodePath& addTravel_simple(Point3 target, GCodePath* path = nullptr);
+    GCodePath& addTravel_simple(Point3 target, GCodePath* path = nullptr, bool force_retract = false);
 
     /*!
      * Plan a prime blob at the current location.

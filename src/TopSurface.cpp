@@ -115,8 +115,9 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
             layer.addTravel_simple(first_low_point); //Move above the first point so we don't collide with our model when doing the initial travel move.
             for (size_t point_index = 0; point_index < low_perimeter_points.size(); ++point_index)
             {
-                layer.addTravel_simple(low_perimeter_points[point_index]);
-                layer.addExtrusionMove(high_perimeter_points[point_index], &line_config, SpaceFillType::Lines, sanding_flow);
+                constexpr bool force_retract = true;
+                layer.addTravel_simple(low_perimeter_points[point_index], nullptr, force_retract);
+                layer.addTravel_simple(high_perimeter_points[point_index], nullptr, force_retract);
             }
         }
     }
