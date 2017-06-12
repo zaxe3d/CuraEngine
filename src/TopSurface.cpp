@@ -76,7 +76,12 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
     const coord_t minimum_sand_distance = (to_height - from_height) / tan(nozzle_angle);
     const coord_t minimum_sand_distance2 = minimum_sand_distance * minimum_sand_distance;
 
-    std::vector<Point> initial_low_perimeter_points = top_surface_below.areas.perimeterPoints(line_spacing);
+    //Offset the polygons to account for the outer diameter of the nozzle.
+    const coord_t nozzle_outer_radius = mesh.getSettingInMicrons("machine_nozzle_tip_outer_diameter") >> 1;
+    const Polygons low_areas = top_surface_below.areas.offset(nozzle_outer_radius, ClipperLib::JoinType::jtRound);
+    const Polygons high_areas = areas.offset(nozzle_outer_radius, ClipperLib::JoinType::jtRound);
+
+    std::vector<Point> initial_low_perimeter_points = low_areas.perimeterPoints(line_spacing);
     if (initial_low_perimeter_points.empty())
     {
         return;
@@ -89,7 +94,7 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
     for (Point low_point : initial_low_perimeter_points)
     {
         Point high_point(low_point);
-        PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
+        PolygonUtils::moveInside(high_areas, high_point, 0); //Move to the edge of the polygon.
         if (vSize2(high_point - low_point) < minimum_sand_distance2) //Nozzle angle doesn't allow us to move like this.
         {
             draw_diagonals = true; //Only draw diagonal sanding lines if the top surface is adjacent to the surface below.
