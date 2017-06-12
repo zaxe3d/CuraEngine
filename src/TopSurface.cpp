@@ -70,8 +70,11 @@ void TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_
 void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer)
 {
     const coord_t line_spacing = mesh.getSettingInMicrons("sanding_line_spacing");
-    const float sanding_flow = mesh.getSettingAsRatio("sanding_flow");
+    const double sanding_flow = mesh.getSettingAsRatio("sanding_flow");
     const unsigned int number_of_passes = mesh.getSettingAsCount("sanding_passes");
+    const double nozzle_angle = mesh.getSettingInAngleRadians("machine_nozzle_expansion_angle");
+    const coord_t minimum_sand_distance = (to_height - from_height) / tan(nozzle_angle);
+    const coord_t minimum_sand_distance2 = minimum_sand_distance * minimum_sand_distance;
 
     std::vector<Point> below_perimeter_points = top_surface_below.areas.perimeterPoints(line_spacing);
     if (below_perimeter_points.empty())
@@ -86,6 +89,10 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
         {
             Point high_point(low_point);
             PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
+            if (vSize2(high_point - low_point) < minimum_sand_distance2) //Nozzle angle doesn't allow us to move like this.
+            {
+                continue;
+            }
             const Point3 high_point3(high_point.X, high_point.Y, layer.z);
             const Point3 low_point3(low_point.X, low_point.Y, top_surface_below.from_height);
             layer.addTravel_simple(low_point3);
