@@ -24,6 +24,13 @@ TopSurface::TopSurface(const SliceMeshStorage& mesh, const size_t layer_number)
 
     Polygons mesh_this = mesh.layers[layer_number].getOutlines();
     areas = mesh_this.difference(mesh_above);
+
+    //Offset the polygons to account for the outer diameter of the nozzle.
+    const coord_t nozzle_outer_radius = mesh.getSettingInMicrons("machine_nozzle_tip_outer_diameter") >> 1;
+    const Polygons diagonal_sand_areas_above = mesh_above.offset(nozzle_outer_radius, ClipperLib::JoinType::jtRound);
+    const Polygons diagonal_sand_mesh = mesh_this.offset(nozzle_outer_radius, ClipperLib::JoinType::jtRound);
+    diagonal_sand_areas = diagonal_sand_mesh.difference(diagonal_sand_areas_above);
+
     to_height = mesh.layers[layer_number].printZ;
     from_height = to_height;
     if (layer_number == 0)
@@ -76,12 +83,7 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
     const coord_t minimum_sand_distance = (to_height - from_height) / tan(nozzle_angle);
     const coord_t minimum_sand_distance2 = minimum_sand_distance * minimum_sand_distance;
 
-    //Offset the polygons to account for the outer diameter of the nozzle.
-    const coord_t nozzle_outer_radius = mesh.getSettingInMicrons("machine_nozzle_tip_outer_diameter") >> 1;
-    const Polygons low_areas = top_surface_below.areas.offset(nozzle_outer_radius, ClipperLib::JoinType::jtRound);
-    const Polygons high_areas = areas.offset(nozzle_outer_radius, ClipperLib::JoinType::jtRound);
-
-    std::vector<Point> initial_low_perimeter_points = low_areas.perimeterPoints(line_spacing);
+    std::vector<Point> initial_low_perimeter_points = top_surface_below.diagonal_sand_areas.perimeterPoints(line_spacing);
     if (initial_low_perimeter_points.empty())
     {
         return;
@@ -94,7 +96,7 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
     for (Point low_point : initial_low_perimeter_points)
     {
         Point high_point(low_point);
-        PolygonUtils::moveInside(high_areas, high_point, 0); //Move to the edge of the polygon.
+        PolygonUtils::moveInside(diagonal_sand_areas, high_point, 0); //Move to the edge of the polygon.
         if (vSize2(high_point - low_point) < minimum_sand_distance2) //Nozzle angle doesn't allow us to move like this.
         {
             draw_diagonals = true; //Only draw diagonal sanding lines if the top surface is adjacent to the surface below.

@@ -38,6 +38,15 @@ public:
     Polygons areas;
 
     /*!
+     * \brief The areas that diagonal sanding should encompass.
+     *
+     * This is offset with the nozzle outer radius, in order to make the outer
+     * border of the nozzle slide over the material rather than bury into the
+     * material.
+     */
+    Polygons diagonal_sand_areas;
+
+    /*!
      * \brief The height of the bottom of this layer.
      */
     coord_t from_height;
