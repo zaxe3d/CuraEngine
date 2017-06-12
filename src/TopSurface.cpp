@@ -76,16 +76,16 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
     const coord_t minimum_sand_distance = (to_height - from_height) / tan(nozzle_angle);
     const coord_t minimum_sand_distance2 = minimum_sand_distance * minimum_sand_distance;
 
-    std::vector<Point> below_perimeter_points = top_surface_below.areas.perimeterPoints(line_spacing);
-    if (below_perimeter_points.empty())
+    std::vector<Point> low_perimeter_points = top_surface_below.areas.perimeterPoints(line_spacing);
+    if (low_perimeter_points.empty())
     {
         return;
     }
-    const Point first_low_point = below_perimeter_points[0];
+    const Point first_low_point = low_perimeter_points[0];
     for (unsigned int pass = 0; pass < number_of_passes; ++pass)
     {
         layer.addTravel_simple(first_low_point); //Move above the first point so we don't collide with our model when doing the initial travel move.
-        for (Point low_point : below_perimeter_points)
+        for (Point low_point : low_perimeter_points)
         {
             Point high_point(low_point);
             PolygonUtils::moveInside(areas, high_point, 0); //Move to the edge of the polygon.
