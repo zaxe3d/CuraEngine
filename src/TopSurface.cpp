@@ -79,7 +79,7 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
     const coord_t line_spacing = mesh.getSettingInMicrons("sanding_line_spacing");
     const unsigned int number_of_passes = mesh.getSettingAsCount("sanding_passes");
     const double nozzle_angle = mesh.getSettingInAngleRadians("machine_nozzle_expansion_angle");
-    const coord_t minimum_sand_distance = (to_height - from_height) / tan(nozzle_angle);
+    const coord_t minimum_sand_distance = (to_height - top_surface_below.from_height) / tan(nozzle_angle);
     const coord_t minimum_sand_distance2 = minimum_sand_distance * minimum_sand_distance;
 
     std::vector<Point> initial_low_perimeter_points = top_surface_below.diagonal_sand_areas.perimeterPoints(line_spacing);
