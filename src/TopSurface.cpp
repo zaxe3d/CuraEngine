@@ -74,15 +74,15 @@ void TopSurface::sand(const SliceMeshStorage& mesh, const GCodePathConfig& line_
     }
 }
 
-void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_below, LayerPlan& layer)
+void TopSurface::sandAbove(const SliceMeshStorage& mesh, const GCodePathConfig& line_config, const TopSurface& top_surface_above, LayerPlan& layer)
 {
     const coord_t line_spacing = mesh.getSettingInMicrons("sanding_line_spacing");
     const unsigned int number_of_passes = mesh.getSettingAsCount("sanding_passes");
     const double nozzle_angle = mesh.getSettingInAngleRadians("machine_nozzle_expansion_angle");
-    const coord_t minimum_sand_distance = (to_height - top_surface_below.from_height) / tan(nozzle_angle);
+    const coord_t minimum_sand_distance = (top_surface_above.to_height - from_height) / tan(nozzle_angle);
     const coord_t minimum_sand_distance2 = minimum_sand_distance * minimum_sand_distance;
 
-    std::vector<Point> initial_low_perimeter_points = top_surface_below.diagonal_sand_areas.perimeterPoints(line_spacing);
+    std::vector<Point> initial_low_perimeter_points = diagonal_sand_areas.perimeterPoints(line_spacing);
     if (initial_low_perimeter_points.empty())
     {
         return;
@@ -95,14 +95,14 @@ void TopSurface::sandBelow(const SliceMeshStorage& mesh, const GCodePathConfig& 
     for (Point low_point : initial_low_perimeter_points)
     {
         Point high_point(low_point);
-        PolygonUtils::moveInside(diagonal_sand_areas, high_point, 0); //Move to the edge of the polygon.
+        PolygonUtils::moveInside(top_surface_above.diagonal_sand_areas, high_point, 0); //Move to the edge of the polygon.
         if (vSize2(high_point - low_point) < minimum_sand_distance2) //Nozzle angle doesn't allow us to move like this.
         {
             draw_diagonals = true; //Only draw diagonal sanding lines if the top surface is adjacent to the surface below.
             continue;
         }
-        const Point3 low_point3(low_point.X, low_point.Y, top_surface_below.from_height);
-        const Point3 high_point3(high_point.X, high_point.Y, layer.z);
+        const Point3 low_point3(low_point.X, low_point.Y, from_height);
+        const Point3 high_point3(high_point.X, high_point.Y, top_surface_above.to_height);
         low_perimeter_points.push_back(low_point3);
         high_perimeter_points.push_back(high_point3);
     }
