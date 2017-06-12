@@ -183,7 +183,7 @@ INLINE float vSize2f(const Point& p0)
     return float(p0.X)*float(p0.X)+float(p0.Y)*float(p0.Y);
 }
 
-INLINE bool shorterThen(const Point& p0, int32_t len)
+INLINE bool shorterThan(const Point& p0, int32_t len)
 {
     if (p0.X > len || p0.X < -len)
         return false;
@@ -192,7 +192,7 @@ INLINE bool shorterThen(const Point& p0, int32_t len)
     return vSize2(p0) <= len*len;
 }
 
-INLINE bool shorterThen(const Point3& vector, int32_t length)
+INLINE bool shorterThan(const Point3& vector, int32_t length)
 {
     if (vector.x > length || vector.x < -length)
     {

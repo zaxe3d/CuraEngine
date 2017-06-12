@@ -62,7 +62,7 @@ Comb::~Comb()
 
 bool Comb::calc(Point startPoint, Point endPoint, CombPaths& combPaths, bool _startInside, bool _endInside, int64_t max_comb_distance_ignored, bool via_outside_makes_combing_fail, bool fail_on_unavoidable_obstacles)
 {
-    if (shorterThen(endPoint - startPoint, max_comb_distance_ignored))
+    if (shorterThan(endPoint - startPoint, max_comb_distance_ignored))
     {
         return true;
     }

@@ -275,7 +275,7 @@ GCodePath& LayerPlan::addTravel(Point p, bool force_comb_retract)
         first_travel_destination = p;
         first_travel_destination_is_inside = is_inside;
     }
-    else if (force_comb_retract && last_planned_position && !shorterThen(*last_planned_position - p, retraction_config.retraction_min_travel_distance))
+    else if (force_comb_retract && last_planned_position && !shorterThan(*last_planned_position - p, retraction_config.retraction_min_travel_distance))
     {
         // path is not shorter than min travel distance, force a retraction
         path->retract = true;
@@ -337,7 +337,7 @@ GCodePath& LayerPlan::addTravel(Point p, bool force_comb_retract)
     }
     
     // no combing? retract only when path is not shorter than minimum travel distance
-    if (!combed && !is_first_travel_of_layer && last_planned_position && !shorterThen(*last_planned_position - p, retraction_config.retraction_min_travel_distance))
+    if (!combed && !is_first_travel_of_layer && last_planned_position && !shorterThan(*last_planned_position - p, retraction_config.retraction_min_travel_distance))
     {
         if (was_inside) // when the previous location was from printing something which is considered inside (not support or prime tower etc)
         {               // then move inside the printed part, so that we don't ooze on the outer wall while retraction, but on the inside of the print.
@@ -901,9 +901,9 @@ void LayerPlan::writeGCode(GCodeExport& gcode)
                         && paths[path_idx+1].points.size() == 1 // is single extruded line
                         && !paths[path_idx+1].config->isTravelPath() // next move is extrusion
                         && paths[path_idx+2].config->isTravelPath() // next next move is travel
-                        && shorterThen(path.points.back() - gcode.getPosition(), 2 * nozzle_size) // preceding extrusion is close by
-                        && shorterThen(paths[path_idx+1].points.back() - path.points.back(), 2 * nozzle_size) // extrusion move is small
-                        && shorterThen(paths[path_idx+2].points.back() - paths[path_idx+1].points.back(), 2 * nozzle_size) // consecutive extrusion is close by
+                        && shorterThan(path.points.back() - gcode.getPosition(), 2 * nozzle_size) // preceding extrusion is close by
+                        && shorterThan(paths[path_idx+1].points.back() - path.points.back(), 2 * nozzle_size) // extrusion move is small
+                        && shorterThan(paths[path_idx+2].points.back() - paths[path_idx+1].points.back(), 2 * nozzle_size) // consecutive extrusion is close by
                     )
                     {
                         const Point3& target = paths[path_idx + 2].points.back();

@@ -191,11 +191,11 @@ void PolygonProximityLinker::findProximatePoints(const ListPolyIt a_point_it, Li
 
     int64_t dist = sqrt(dist2);
 
-    if (shorterThen(closest - b_from, 10))
+    if (shorterThan(closest - b_from, 10))
     {
         addProximityLink(a_point_it, b_from_it, dist, ProximityPointLinkType::NORMAL);
     }
-    else if (shorterThen(closest - b_to, 10))
+    else if (shorterThan(closest - b_to, 10))
     {
         addProximityLink(a_point_it, b_to_it, dist, ProximityPointLinkType::NORMAL);
     }

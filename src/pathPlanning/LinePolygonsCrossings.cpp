@@ -109,7 +109,7 @@ bool LinePolygonsCrossings::lineSegmentCollidesWithBoundary()
 
 bool LinePolygonsCrossings::getCombingPath(CombPath& combPath, int64_t max_comb_distance_ignored, bool fail_on_unavoidable_obstacles)
 {
-    if (shorterThen(endPoint - startPoint, max_comb_distance_ignored) || !lineSegmentCollidesWithBoundary())
+    if (shorterThan(endPoint - startPoint, max_comb_distance_ignored) || !lineSegmentCollidesWithBoundary())
     {
         //We're not crossing any boundaries. So skip the comb generation.
         combPath.push_back(startPoint); 

@@ -1158,7 +1158,7 @@ void ConstPolygonRef::smooth2(int remove_length, PolygonRef result) const
         const Point& last = thiss[poly_idx - 1];
         const Point& now = thiss[poly_idx];
         const Point& next = thiss[(poly_idx + 1) % thiss.size()];
-        if (shorterThen(last - now, remove_length) && shorterThen(now - next, remove_length))
+        if (cura::shorterThan(last - now, remove_length) && cura::shorterThan(now - next, remove_length))
         {
             poly_idx++; // skip the next line piece (dont escalate the removal of edges)
             if (poly_idx < thiss.size())

@@ -836,7 +836,7 @@ bool PolygonUtils::getNextPointWithDistance(Point from, int64_t dist, ConstPolyg
     {
         int next_idx = (prev_idx + 1 + poly_start_idx) % poly.size(); // last checked segment is between last point in poly and poly[0]...
         const Point& next_poly_point = poly[next_idx];
-        if ( !shorterThen(next_poly_point - from, dist) )
+        if (!shorterThan(next_poly_point - from, dist))
         {
             /*
              *                 x    r
@@ -855,7 +855,7 @@ bool PolygonUtils::getNextPointWithDistance(Point from, int64_t dist, ConstPolyg
             
             Point pn = next_poly_point - prev_poly_point;
             
-            if (shorterThen(pn, 100)) // when precision is limited
+            if (shorterThan(pn, 100)) // when precision is limited
             {
                 Point middle = (next_poly_point + prev_poly_point) / 2;
                 int64_t dist_to_middle = vSize(from - middle);
@@ -875,7 +875,7 @@ bool PolygonUtils::getNextPointWithDistance(Point from, int64_t dist, ConstPolyg
             Point px = dot(pf, pn) / vSize(pn) * pn / vSize(pn);
             Point xf = pf - px;
             
-            if (!shorterThen(xf, dist)) // line lies wholly further than pn
+            if (!shorterThan(xf, dist)) // line lies wholly further than pn
             {
                 prev_poly_point = next_poly_point;
                 continue;
