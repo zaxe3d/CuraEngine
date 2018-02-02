@@ -776,7 +776,8 @@ LayerPlan& FffGcodeWriter::processLayer(const SliceDataStorage& storage, int lay
     coord_t max_inner_wall_width = 0;
     for (const SettingsBaseVirtual& mesh_settings : storage.meshes)
     {
-        max_inner_wall_width = std::max(max_inner_wall_width, mesh_settings.getSettingInMicrons((mesh_settings.getSettingAsCount("wall_line_count") > 1) ? "wall_line_width_x" : "wall_line_width_0")); 
+        int wall_line_count = (layer_nr == 0) ? 1 : mesh_settings.getSettingAsCount("wall_line_count");
+        max_inner_wall_width = std::max(max_inner_wall_width, mesh_settings.getSettingInMicrons((wall_line_count > 1) ? "wall_line_width_x" : "wall_line_width_0")); 
         if (layer_nr == 0)
         {
             const ExtruderTrain* train = storage.meshgroup->getExtruderTrain(mesh_settings.getSettingAsExtruderNr((mesh_settings.getSettingAsCount("wall_line_count") > 1) ? "wall_0_extruder_nr" : "wall_x_extruder_nr"));
@@ -1190,7 +1191,8 @@ void FffGcodeWriter::addMeshPartToGCode(const SliceDataStorage& storage, const S
     //After a layer part, make sure the nozzle is inside the comb boundary, so we do not retract on the perimeter.
     if (added_something && (!getSettingBoolean("magic_spiralize") || static_cast<int>(gcode_layer.getLayerNr()) < mesh.getSettingAsCount("bottom_layers")))
     {
-        int innermost_wall_line_width = mesh.getSettingInMicrons((mesh.getSettingAsCount("wall_line_count") > 1) ? "wall_line_width_x" : "wall_line_width_0");
+        int wall_line_count = (gcode_layer.getLayerNr() == 0) ? 1 : mesh.getSettingAsCount("wall_line_count");
+        int innermost_wall_line_width = mesh.getSettingInMicrons((wall_line_count > 1) ? "wall_line_width_x" : "wall_line_width_0");
         if (gcode_layer.getLayerNr() == 0)
         {
             innermost_wall_line_width *= mesh.getSettingAsRatio("initial_layer_line_width_factor");

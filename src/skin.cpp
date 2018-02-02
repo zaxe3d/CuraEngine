@@ -64,7 +64,7 @@ SkinInfillAreaComputation::SkinInfillAreaComputation(int layer_nr, const SliceDa
 , mesh(mesh)
 , bottom_layer_count(mesh.getSettingAsCount("bottom_layers"))
 , top_layer_count(mesh.getSettingAsCount("top_layers"))
-, wall_line_count(mesh.getSettingAsCount("wall_line_count"))
+, wall_line_count(layer_nr > 0 ? mesh.getSettingAsCount("wall_line_count") : 1)
 , skin_line_width(getSkinLineWidth(storage, mesh, layer_nr))
 , wall_line_width_0(getWallLineWidth0(storage, mesh, layer_nr))
 , wall_line_width_x(getWallLineWidthX(storage, mesh, layer_nr))
@@ -401,7 +401,7 @@ void SkinInfillAreaComputation::generateInfill(SliceLayerPart& part, const Polyg
     {
         return; // the last wall is not present, the part should only get inter preimeter gaps, but no infill.
     }
-    const int wall_line_count = mesh.getSettingAsCount("wall_line_count");
+    const int wall_line_count = (layer_nr == 0) ? 1 : mesh.getSettingAsCount("wall_line_count");
     const coord_t infill_line_distance = mesh.getSettingInMicrons("infill_line_distance");
 
     coord_t offset_from_inner_wall = -infill_skin_overlap;
@@ -458,7 +458,8 @@ void SkinInfillAreaComputation::generateInfill(SliceLayerPart& part, const Polyg
 void SkinInfillAreaComputation::generateRoofing(SliceLayerPart& part)
 {
     int roofing_layer_count = mesh.getSettingAsCount("roofing_layer_count");
-    const unsigned int wall_idx = std::min(2, mesh.getSettingAsCount("wall_line_count"));
+    int wall_line_count = (layer_nr == 0) ? 1 : mesh.getSettingAsCount("wall_line_count");
+    const unsigned int wall_idx = std::min(2, wall_line_count);
 
     for (SkinPart& skin_part : part.skin_parts)
     {

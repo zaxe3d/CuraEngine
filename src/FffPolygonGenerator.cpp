@@ -717,7 +717,7 @@ void FffPolygonGenerator::processInsets(const SliceDataStorage& storage, SliceMe
     SliceLayer* layer = &mesh.layers[layer_nr];
     if (mesh.getSettingAsSurfaceMode("magic_mesh_surface_mode") != ESurfaceMode::SURFACE)
     {
-        int inset_count = mesh.getSettingAsCount("wall_line_count");
+        int inset_count = (layer_nr == 0) ? 1 : mesh.getSettingAsCount("wall_line_count");
         if (getSettingBoolean("magic_spiralize") && static_cast<int>(layer_nr) < mesh.getSettingAsCount("bottom_layers") && ((layer_nr % 2) + 2) % 2 == 1)//Add extra insets every 2 layers when spiralizing, this makes bottoms of cups watertight.
             inset_count += 5;
         int line_width_0 = mesh.getSettingInMicrons("wall_line_width_0");
