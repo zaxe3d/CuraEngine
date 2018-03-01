@@ -457,6 +457,7 @@ void GCodeExport::writeTypeComment(PrintFeatureType type)
             *output_stream << ";TYPE:FILL" << new_line;
             break;
         case PrintFeatureType::SupportInfill:
+        case PrintFeatureType::SupportInterface:
             *output_stream << ";TYPE:SUPPORT" << new_line;
             break;
         case PrintFeatureType::MoveCombing:
