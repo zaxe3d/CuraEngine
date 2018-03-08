@@ -1332,7 +1332,7 @@ void AreaSupport::generateSupportRoof(SliceDataStorage& storage, const SliceMesh
             mesh_outlines.add(mesh.layers[std::round(layer_idx_above)].getOutlines());
         }
         Polygons roofs;
-        generateSupportInterfaceLayer(global_support_areas_per_layer[layer_idx], mesh_outlines, roof_line_width, roofs);
+        generateSupportInterfaceLayer(global_support_areas_per_layer[layer_idx], mesh_outlines, mesh.getSettingInMicrons("support_offset"), roofs);
         support_layers[layer_idx].support_roof.add(roofs);
     }
 }
